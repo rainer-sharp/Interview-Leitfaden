@@ -39,6 +39,9 @@ def anon(database):
 
     from app.main import app
 
+    from app.services.auth import limiter
+
+    limiter.failures.clear()
     with TestClient(app) as test_client:
         yield test_client
 
@@ -46,7 +49,7 @@ def anon(database):
 @pytest.fixture
 def client(anon):
     response = anon.post("/api/auth/login", json={"passwort": "test-passwort"})
-    assert response.status_code in (200, 405)  # 405, solange Paket 10 fehlt
+    assert response.status_code == 200
     return anon
 
 

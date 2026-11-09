@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { logout } from './stores/session'
 
 const route = useRoute()
+const router = useRouter()
+
+async function signOut() {
+  await logout()
+  router.replace('/login')
+}
 </script>
 
 <template>
@@ -10,7 +17,11 @@ const route = useRoute()
       <RouterLink to="/" class="font-semibold text-accent-800">Interview-Leitfaden</RouterLink>
       <RouterLink to="/" class="nav-link">Gruppen</RouterLink>
       <RouterLink to="/interviews" class="nav-link">Interviews</RouterLink>
-      <RouterLink to="/interviews/neu" class="btn btn-primary ml-auto">Neues Interview</RouterLink>
+      <a href="/api/backup" class="nav-link" download title="Datenbank und alle Interviews als ZIP">Backup</a>
+      <div class="ml-auto flex items-center gap-2">
+        <RouterLink to="/interviews/neu" class="btn btn-primary">Neues Interview</RouterLink>
+        <button class="btn" @click="signOut">Abmelden</button>
+      </div>
     </nav>
   </header>
   <RouterView />

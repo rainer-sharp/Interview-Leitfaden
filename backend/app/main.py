@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.api.auth import require_auth, router as auth_router
+from app.api.backup import router as backup_router
 from app.api.catalogs import router as catalogs_router
 from app.api.imports import router as imports_router
 from app.api.interviews import router as interviews_router
@@ -42,9 +44,9 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-app.include_router(catalogs_router, prefix="/api")
-app.include_router(imports_router, prefix="/api")
-app.include_router(interviews_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
+for protected in (catalogs_router, imports_router, interviews_router, backup_router):
+    app.include_router(protected, prefix="/api", dependencies=[Depends(require_auth)])
 
 if (STATIC_DIR / "assets").is_dir():
     app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")

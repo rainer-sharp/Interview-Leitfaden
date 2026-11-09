@@ -6,7 +6,12 @@ export const testdata = (name: string) => resolve(import.meta.dirname, '../../te
 let counter = 0
 export const unique = (prefix: string) => `${prefix} ${Date.now()}-${++counter}`
 
-export async function login(_page: Page) {}
+export async function login(page: Page) {
+  await page.goto('/login')
+  await page.getByLabel('Passwort').fill('e2e-passwort')
+  await page.getByRole('button', { name: 'Anmelden' }).click()
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'))
+}
 
 export async function createGroup(page: Page, name = unique('Gruppe')) {
   await page.goto('/')
