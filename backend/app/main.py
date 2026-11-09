@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.catalogs import router as catalogs_router
 from app.api.imports import router as imports_router
+from app.api.interviews import router as interviews_router
 from app.config import get_settings, validate_secrets
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -43,6 +44,7 @@ def health() -> dict[str, str]:
 
 app.include_router(catalogs_router, prefix="/api")
 app.include_router(imports_router, prefix="/api")
+app.include_router(interviews_router, prefix="/api")
 
 if (STATIC_DIR / "assets").is_dir():
     app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")

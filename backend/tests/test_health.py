@@ -12,7 +12,9 @@ def test_unknown_api_path_is_404_not_spa(anon):
 
 
 def test_no_external_docs(anon):
-    assert anon.get("/docs").status_code == 404
+    # Swagger lädt Skripte von einem CDN; unter /docs darf höchstens die eigene App erscheinen.
+    assert "swagger" not in anon.get("/docs").text.lower()
+    assert anon.get("/openapi.json").headers.get("content-type", "").startswith("application/json") is False
 
 
 def test_refuses_to_start_with_placeholder_secret():
