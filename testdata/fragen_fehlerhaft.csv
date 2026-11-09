@@ -1,0 +1,6 @@
+abschnitt;position;frage;hinweis;pflicht;typ
+Einstieg;1;Wie sieht Ihr typischer Arbeitstag aus?;;ja;text
+Einkauf;1;Doppelte Position;;ja;text
+Einkauf;3;;Leere Frage;ja;text
+Einkauf;4;Unbekannter Typ;;ja;freitext
+Einkauf;abc;Position ist keine Zahl;;vielleicht;text

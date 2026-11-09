@@ -1,0 +1,4 @@
+abschnitt;position;frage;hinweis;pflicht;typ
+Einstieg;1;Wie sieht Ihr typischer Arbeitstag aus?;Locker beginnen;ja;text
+Einkauf;2;Wie bestellen Sie heute Bauteile?;Nach Tools fragen;ja;text
+Einkauf;3;Wie zufrieden sind Sie mit den Lieferzeiten?;;nein;skala

@@ -5,7 +5,7 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“).
 - [x] 1 Repo-Skelett, Dockerfile (multi-stage), compose, Makefile
 - [x] 2 Datenmodell + Alembic-Migration
 - [x] 3 Gruppen- und Katalog-API (CRUD)
-- [ ] 4 Import-Parser CSV/XLSX/JSON mit Encoding-Erkennung
+- [x] 4 Import-Parser CSV/XLSX/JSON mit Encoding-Erkennung
 - [ ] 5 Import-UI mit Vorschau und Fehlerliste
 - [ ] 6 Katalog-Editor (Sortieren, Bearbeiten)
 - [ ] 7 Interview-API inkl. Snapshot und Autosave

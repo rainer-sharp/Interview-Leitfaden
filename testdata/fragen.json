@@ -1,0 +1,26 @@
+{
+  "fragen": [
+    {
+      "abschnitt": "Einstieg",
+      "position": 1,
+      "frage": "Wie sieht Ihr typischer Arbeitstag aus?",
+      "hinweis": "Locker beginnen",
+      "pflicht": true,
+      "typ": "text"
+    },
+    {
+      "abschnitt": "Einkauf",
+      "position": 2,
+      "frage": "Wie bestellen Sie heute Bauteile für das Größenlager?",
+      "hinweis": "Nach Tools fragen",
+      "pflicht": true
+    },
+    {
+      "abschnitt": "Einkauf",
+      "position": 3,
+      "frage": "Wie zufrieden sind Sie mit den Lieferzeiten?",
+      "pflicht": false,
+      "typ": "skala"
+    }
+  ]
+}
