@@ -1,0 +1,7 @@
+﻿interview_id;person;organisation;datum;gruppe;katalog;version;position;abschnitt;frage;pflicht;status;notiz
+1;Jürgen Müller;Muster & Söhne GmbH;2026-11-09;Kunden Einkauf;Leitfaden;1;1;Einstieg;Wie sieht Ihr typischer Arbeitstag aus?;ja;beantwortet;"Beginnt um 7 Uhr.
+Zuerst Wareneingang, dann Mails."
+1;Jürgen Müller;Muster & Söhne GmbH;2026-11-09;Kunden Einkauf;Leitfaden;1;2;Einkauf;Wie bestellen Sie heute Bauteile?;ja;beantwortet;"'=Telefon; manchmal ""Fax"""
+1;Jürgen Müller;Muster & Söhne GmbH;2026-11-09;Kunden Einkauf;Leitfaden;1;3;Einkauf;Wie zufrieden sind Sie mit den Lieferzeiten?;nein;uebersprungen;
+1;Jürgen Müller;Muster & Söhne GmbH;2026-11-09;Kunden Einkauf;Leitfaden;1;4;Abschluss;Was würden Sie sofort ändern?;nein;offen;
+1;Jürgen Müller;Muster & Söhne GmbH;2026-11-09;Kunden Einkauf;Leitfaden;1;;;Gesamtnotiz;;abgeschlossen;Lieferzeiten sind das Hauptthema.

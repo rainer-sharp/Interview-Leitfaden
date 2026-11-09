@@ -19,6 +19,12 @@ const saveState = ref<SaveState>('saved')
 const showList = ref(false)
 const noteField = ref<HTMLTextAreaElement | null>(null)
 
+const EXPORTS = [
+  { ext: 'pdf', label: 'PDF' },
+  { ext: 'md', label: 'Markdown' },
+  { ext: 'csv', label: 'CSV (Excel)' },
+]
+
 type Patch = { notiz?: string; status?: AnswerStatus; gesamtnotiz?: string }
 
 const queue = new SaveQueue<Patch>(
@@ -277,7 +283,17 @@ onBeforeUnmount(() => {
           @gesamtnotiz="onGesamtnotiz"
           @finish="setFinished(true)"
           @reopen="setFinished(false)"
-        />
+        >
+          <div class="card space-y-2">
+            <h2 class="font-semibold">Exportieren</h2>
+            <p class="muted">Der Export enthält den gespeicherten Stand.</p>
+            <div class="flex flex-wrap gap-2">
+              <a v-for="format in EXPORTS" :key="format.ext" :href="`/api/interviews/${id}/export.${format.ext}`" class="btn" download>
+                {{ format.label }}
+              </a>
+            </div>
+          </div>
+        </InterviewSummaryPane>
 
         <article v-else-if="current" class="mx-auto max-w-3xl space-y-5" data-testid="question-screen">
           <div class="flex flex-wrap items-baseline justify-between gap-2 text-sm text-stone-500">

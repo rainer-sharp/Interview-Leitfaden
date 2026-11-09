@@ -1,9 +1,12 @@
+from urllib.parse import quote
+
 from fastapi import APIRouter, HTTPException, Response
 
 from app.api.deps import Db, get_or_404
 from app.api.schemas import AnswerOut, AnswerUpdate, InterviewIn, InterviewOut, InterviewSummary, InterviewUpdate
 from app.models import Answer, Interview, Questionnaire
 from app.services import audit
+from app.services import export
 from app.services import interviews as service
 
 router = APIRouter(prefix="/interviews")
@@ -106,3 +109,24 @@ def reopen(interview_id: int, db: Db):
         audit.log(db, "interview", interview.id, "wiedergeoeffnet")
         db.commit()
     return detail(interview)
+
+
+EXPORTS = {
+    "md": ("text/markdown; charset=utf-8", export.to_markdown),
+    "csv": ("text/csv; charset=utf-8", export.to_csv),
+    "pdf": ("application/pdf", export.to_pdf),
+}
+
+
+@router.get("/{interview_id}/export.{fmt}")
+def export_interview(interview_id: int, fmt: str, db: Db):
+    if fmt not in EXPORTS:
+        raise HTTPException(status_code=404, detail="Unbekanntes Exportformat")
+    interview = get_or_404(db, Interview, interview_id)
+    media_type, render = EXPORTS[fmt]
+    name = export.filename(interview, fmt)
+    return Response(
+        content=render(interview),
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename=\"{name}\"; filename*=UTF-8''{quote(name)}"},
+    )

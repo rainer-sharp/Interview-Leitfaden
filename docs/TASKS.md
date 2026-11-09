@@ -10,5 +10,5 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“).
 - [x] 6 Katalog-Editor (Sortieren, Bearbeiten)
 - [x] 7 Interview-API inkl. Snapshot und Autosave
 - [x] 8 Interview-Modus UI mit Navigation und Tastenkürzeln
-- [ ] 9 Abschluss + Export Markdown/PDF/CSV
+- [x] 9 Abschluss + Export Markdown/PDF/CSV
 - [ ] 10 Admin-Passwort, Backup-Endpunkt, README

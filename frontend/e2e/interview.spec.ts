@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
 import { createGroup, importCatalog, login, unique } from './helpers'
 
@@ -61,6 +62,12 @@ test('komplettes Interview per Tastatur und Knöpfen durchklicken', async ({ pag
   await page.getByLabel('Gesamtnotiz').fill('Offenes Gespräch, Lieferzeiten sind das Hauptthema.')
   await page.getByRole('button', { name: 'Interview abschließen' }).click()
   await expect(page.getByRole('heading', { name: 'Interview abgeschlossen' })).toBeVisible()
+
+  const download = page.waitForEvent('download')
+  await page.getByRole('link', { name: 'Markdown' }).click()
+  const markdown = await (await download).path().then((p) => readFile(p, 'utf-8'))
+  expect(markdown).toContain('Per Telefon und E-Mail.')
+  expect(markdown).toContain('Offenes Gespräch, Lieferzeiten sind das Hauptthema.')
 
   await page.reload()
   await expect(page.getByLabel('Gesamtnotiz')).toHaveValue('Offenes Gespräch, Lieferzeiten sind das Hauptthema.')
