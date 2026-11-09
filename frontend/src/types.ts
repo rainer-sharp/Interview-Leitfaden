@@ -57,3 +57,43 @@ export interface ImportPreview {
   errors: ImportIssue[]
   warnings: ImportIssue[]
 }
+
+export type AnswerStatus = 'offen' | 'beantwortet' | 'uebersprungen' | 'spaeter'
+
+export interface QuestionSnapshot {
+  question_id: number
+  abschnitt: string
+  position: number
+  text: string
+  hinweis: string
+  pflicht: boolean
+  typ: QuestionType
+}
+
+export interface Answer {
+  id: number
+  position: number
+  question_snapshot: QuestionSnapshot
+  notiz: string
+  status: AnswerStatus
+  geaendert_am: string
+}
+
+export interface InterviewSummary {
+  id: number
+  questionnaire_id: number
+  person: string
+  organisation: string
+  datum: string
+  status: 'laufend' | 'abgeschlossen'
+  group_name: string
+  questionnaire_name: string
+  version: number
+  fragen: number
+  bearbeitet: number
+}
+
+export interface Interview extends InterviewSummary {
+  gesamtnotiz: string
+  answers: Answer[]
+}
