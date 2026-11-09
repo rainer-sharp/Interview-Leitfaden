@@ -6,7 +6,7 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“).
 - [x] 2 Datenmodell + Alembic-Migration
 - [x] 3 Gruppen- und Katalog-API (CRUD)
 - [x] 4 Import-Parser CSV/XLSX/JSON mit Encoding-Erkennung
-- [ ] 5 Import-UI mit Vorschau und Fehlerliste
+- [x] 5 Import-UI mit Vorschau und Fehlerliste
 - [ ] 6 Katalog-Editor (Sortieren, Bearbeiten)
 - [ ] 7 Interview-API inkl. Snapshot und Autosave
 - [ ] 8 Interview-Modus UI mit Navigation und Tastenkürzeln
