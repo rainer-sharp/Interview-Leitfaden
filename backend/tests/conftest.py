@@ -46,7 +46,7 @@ def anon(database):
 @pytest.fixture
 def client(anon):
     response = anon.post("/api/auth/login", json={"passwort": "test-passwort"})
-    assert response.status_code in (200, 404)  # 404, solange Paket 10 fehlt
+    assert response.status_code in (200, 405)  # 405, solange Paket 10 fehlt
     return anon
 
 
