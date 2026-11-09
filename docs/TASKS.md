@@ -3,7 +3,7 @@
 Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“).
 
 - [x] 1 Repo-Skelett, Dockerfile (multi-stage), compose, Makefile
-- [ ] 2 Datenmodell + Alembic-Migration
+- [x] 2 Datenmodell + Alembic-Migration
 - [ ] 3 Gruppen- und Katalog-API (CRUD)
 - [ ] 4 Import-Parser CSV/XLSX/JSON mit Encoding-Erkennung
 - [ ] 5 Import-UI mit Vorschau und Fehlerliste
