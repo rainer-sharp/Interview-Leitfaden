@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-accent-50: #eef6f5;
+  --color-accent-100: #d6eae7;
+  --color-accent-600: #1f6f68;
+  --color-accent-700: #175a54;
+  --color-accent-800: #124844;
+}
+
+body {
+  background: #f6f6f3;
+  color: #1c1f1e;
+}

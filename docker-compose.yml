@@ -1,0 +1,53 @@
+services:
+  app:
+    build: .
+    image: interview-leitfaden:latest
+    container_name: interview-leitfaden
+    env_file: .env
+    ports:
+      - "${APP_PORT:-8080}:8000"
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  backup:
+    image: alpine:3.20
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache sqlite >/dev/null
+        while true; do
+          sqlite3 /data/interviews.db ".backup /backups/interviews-$$(date +%F).db"
+          find /backups -name 'interviews-*.db' -mtime +${BACKUP_KEEP_DAYS:-14} -delete
+          sleep 86400
+        done
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["proxy"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  caddy_data:

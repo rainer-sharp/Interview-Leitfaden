@@ -1,0 +1,17 @@
+.git
+.venv
+.env
+data
+backups
+docs
+testdata
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+backend/tests
+backend/static
+frontend/node_modules
+frontend/dist
+frontend/e2e
+frontend/test-results
+frontend/playwright-report
