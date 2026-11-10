@@ -96,4 +96,39 @@ export interface InterviewSummary {
 export interface Interview extends InterviewSummary {
   gesamtnotiz: string
   answers: Answer[]
+  aufnahmen: Recording[]
+}
+
+export type TranscriptStatus = 'keine' | 'wartend' | 'laeuft' | 'fertig' | 'fehler'
+export type TranscriptionMode = 'mix' | 'tracks'
+
+export interface Recording {
+  id: number
+  interview_id: number
+  dateiname: string
+  groesse: number
+  hochgeladen_am: string
+  transkript_status: TranscriptStatus
+  transkript_optionen: { modus?: TranscriptionMode; name_ich?: string; name_partner?: string; begriffe?: string[] }
+  transkript: string
+  transkript_fehler: string
+  transkript_log: string
+  transkript_start: string | null
+  transkript_ende: string | null
+}
+
+export interface TranscriptionSettings {
+  url: string
+  model: string
+  api_key_gesetzt: boolean
+  modus: TranscriptionMode
+  name_ich: string
+  begriffe: string
+  ffmpeg_verfuegbar: boolean
+}
+
+export interface ServerCheck {
+  ok: boolean
+  meldung: string
+  modelle: string[]
 }

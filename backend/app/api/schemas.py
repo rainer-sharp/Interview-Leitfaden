@@ -114,3 +114,64 @@ class InterviewSummary(Orm):
 class InterviewOut(InterviewSummary):
     gesamtnotiz: str
     answers: list[AnswerOut]
+    aufnahmen: list["RecordingOut"]
+
+
+TranscriptionMode = Literal["mix", "tracks"]
+Short = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)]
+
+
+class RecordingOut(Orm):
+    id: int
+    interview_id: int
+    dateiname: str
+    groesse: int
+    hochgeladen_am: datetime
+    transkript_status: str
+    transkript_optionen: dict
+    transkript: str
+    transkript_fehler: str
+    transkript_log: str
+    transkript_start: datetime | None
+    transkript_ende: datetime | None
+
+
+class TranscriptionStart(BaseModel):
+    modus: TranscriptionMode = "mix"
+    name_ich: Short = ""
+    name_partner: Short = ""
+    begriffe: str = ""
+
+
+class TranscriptUpdate(BaseModel):
+    transkript: str
+
+
+class TranscriptionSettingsOut(BaseModel):
+    url: str
+    model: str
+    api_key_gesetzt: bool
+    modus: TranscriptionMode
+    name_ich: str
+    begriffe: str
+    ffmpeg_verfuegbar: bool
+
+
+class TranscriptionSettingsIn(BaseModel):
+    """None = unverändert, leerer Text = zurück auf die Vorgabe."""
+
+    url: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500, pattern=r"^(|https?://\S+)$")] | None = None
+    model: Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)] | None = None
+    api_key: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None = None
+    modus: Literal["", "mix", "tracks"] | None = None
+    name_ich: Short | None = None
+    begriffe: str | None = None
+
+
+class ServerCheckOut(BaseModel):
+    ok: bool
+    meldung: str
+    modelle: list[str]
+
+
+InterviewOut.model_rebuild()

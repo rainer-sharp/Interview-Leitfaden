@@ -40,6 +40,13 @@ und `ADMIN_PASSWORD` startet sie bewusst nicht. Einen guten Schlüssel erzeugt z
 6. **Abschluss**: Übersicht offener Fragen, Gesamtnotiz, abschließen, exportieren. Abgeschlossene Interviews sind
    schreibgeschützt, bis man sie wieder öffnet.
 
+7. **Aufnahme und Transkript** (im Abschluss-Bildschirm, auch bei abgeschlossenen Interviews): Audiodatei
+   hochladen (OBS-`.mkv` mit den Spuren Mix/Ich/Partner oder `.wav`, `.mp3`, `.m4a`, `.webm` …), „Transkribieren“
+   wählen, Modus, Namen und Kontextbegriffe prüfen und starten. Die App schickt die Aufnahme im Hintergrund an den
+   Transkriptions-Server; der Fortschritt erscheint im Protokoll, die Seite darf dabei geschlossen werden. Das
+   fertige Transkript (Dialog mit Zeitstempeln) steht unter der Aufnahme, lässt sich korrigieren und ist Teil der
+   Exporte (Markdown, PDF, CSV).
+
 Tastenkürzel im Interview: `Strg+Enter` weiter · `Strg+←` zurück · `Strg+S` überspringen (auf dem Mac auch mit `⌘`).
 
 ### Importformat
@@ -53,12 +60,31 @@ Nur `frage` ist Pflicht. Trennzeichen `;` oder `,`, Zeichensatz UTF-8 oder Windo
 `typ` ist einer von `text`, `skala`, `ja_nein`, `auswahl`. In Version 1 wird jede Antwort als Notiz erfasst.
 JSON: eine Liste von Objekten mit denselben Feldern, oder `{"fragen": [...]}`.
 
+### Transkriptions-Server
+
+Transkribiert wird mit `backend/app/services/transcribe_interview.py`, einer unveränderten Kopie aus dem Projekt
+`transcription` (Nemotron-3.5-Transcribe über einen OpenAI-kompatiblen vLLM-Endpunkt). Der Adapter
+`backend/app/services/transcription.py` importiert das Skript als Modul, setzt Server, Modell und Schlüssel und
+liest dessen Markdown-Ausgabe. Änderungen am Skript im Projekt `transcription` vornehmen und die Datei danach
+hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn beide Projekte nebeneinander liegen).
+
+- **Einstellungen** (oben in der Navigation): Server-URL, Modell, API-Schlüssel, „Verbindung testen“ (fragt
+  `/models` ab) sowie Vorgaben für Modus, Interviewer-Name und Kontextbegriffe. Gespeichert in der Datenbank; leere
+  Felder fallen auf `TRANSCRIBE_URL`, `TRANSCRIBE_MODEL`, `TRANSCRIBE_API_KEY` aus der `.env` und danach auf die
+  Werte im Skript zurück.
+- Es läuft immer nur eine Transkription gleichzeitig, weitere warten. Nach einem Neustart der App werden
+  unterbrochene Aufträge wiederholt.
+- Der Container braucht Netzzugriff auf den Server (LAN). `ffmpeg` ist im Image enthalten.
+
 ## Datenschutz und Sicherheit
 
-- Alle Daten liegen in `data/interviews.db`. Es gibt keine externen CDNs, Schriften oder Tracker.
+- Alle Daten liegen in `data/interviews.db`, Audio-Aufnahmen in `data/audio/<interview-id>/`. Es gibt keine
+  externen CDNs, Schriften oder Tracker. Aufnahmen gehen zur Transkription nur an den eingestellten Server.
+- Das Backup-ZIP und die tägliche DB-Sicherung enthalten die Transkripte, **nicht** die Audiodateien. Wer diese
+  sichern will, muss `data/audio/` zusätzlich sichern.
 - Zugang mit einem Admin-Passwort, die Sitzung liegt in einem signierten HttpOnly-Cookie (14 Tage). Ändert man
   `ADMIN_PASSWORD`, werden alle Sitzungen ungültig. Nach 10 Fehlversuchen ist die Anmeldung 15 Minuten gesperrt.
-- Interviews lassen sich einzeln löschen, Notizen inklusive. Das Audit-Log speichert nur IDs und Aktionen, keine Inhalte.
+- Interviews lassen sich einzeln löschen, Notizen, Aufnahmen und Transkripte inklusive. Das Audit-Log speichert nur IDs und Aktionen, keine Inhalte.
 - Hinter dem Proxy (Profil `proxy`) den App-Port nicht zusätzlich nach außen öffnen.
 
 ## Entwicklung ohne Docker

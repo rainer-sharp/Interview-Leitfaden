@@ -9,6 +9,7 @@ import LoginView from './views/LoginView.vue'
 import InterviewStartView from './views/InterviewStartView.vue'
 import InterviewsView from './views/InterviewsView.vue'
 import InterviewView from './views/InterviewView.vue'
+import SettingsView from './views/SettingsView.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -20,6 +21,7 @@ export const router = createRouter({
     { path: '/gruppen/:id/import', component: ImportView, props: (r) => ({ id: Number(r.params.id) }) },
     { path: '/interviews', component: InterviewsView },
     { path: '/interviews/neu', component: InterviewStartView },
+    { path: '/einstellungen', component: SettingsView },
     {
       path: '/interviews/:id',
       component: InterviewView,

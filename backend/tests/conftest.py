@@ -8,7 +8,8 @@ from alembic.config import Config
 BACKEND = Path(__file__).resolve().parent.parent
 TESTDATA = BACKEND.parent / "testdata"
 
-os.environ.update(SECRET_KEY="test-geheimnis", ADMIN_PASSWORD="test-passwort")
+# Der Transkriptions-Thread läuft in Tests nicht; sie rufen transcription.process_next() selbst auf.
+os.environ.update(SECRET_KEY="test-geheimnis", ADMIN_PASSWORD="test-passwort", TRANSCRIPTION_WORKER="0")
 
 
 def _reset_caches() -> None:

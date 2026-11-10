@@ -47,3 +47,23 @@ export const api = {
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   delete: (path: string) => request<void>('DELETE', path),
 }
+
+/** Upload mit Fortschritt (fetch kennt keinen Upload-Fortschritt; Aufnahmen können mehrere GB groß sein). */
+export function upload<T>(path: string, form: FormData, onProgress?: (fraction: number) => void): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `/api${path}`)
+    xhr.responseType = 'json'
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress?.(event.loaded / event.total)
+    }
+    xhr.onerror = () => reject(new ApiError(0, 'Der Server ist nicht erreichbar.'))
+    xhr.onload = () => {
+      if (xhr.status === 401) onUnauthorized()
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(xhr.response as T)
+      const detail = xhr.response?.detail
+      reject(new ApiError(xhr.status, typeof detail === 'string' ? detail : `Fehler ${xhr.status}`))
+    }
+    xhr.send(form)
+  })
+}

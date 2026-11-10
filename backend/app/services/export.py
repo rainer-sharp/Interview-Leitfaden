@@ -42,6 +42,21 @@ def _sections(interview: Interview) -> list[tuple[str, list[Answer]]]:
     return [(name, list(items)) for name, items in groupby(interview.answers, key=lambda a: a.question_snapshot["abschnitt"])]
 
 
+def transcripts(interview: Interview) -> list[tuple[str, str]]:
+    """(Dateiname, Text) je Aufnahme mit Transkript. Die eigene Überschrift und Kopfzeilen des Skripts entfallen,
+    im Export stehen sie unter „Transkript“."""
+    result = []
+    for recording in interview.recordings:
+        text = recording.transkript.strip()
+        if not text:
+            continue
+        lines = text.splitlines()
+        if "---" in lines[:15] and lines[0].startswith("# "):
+            lines = lines[lines.index("---") + 1:]
+        result.append((recording.dateiname, "\n".join(lines).strip()))
+    return result
+
+
 def filename(interview: Interview, extension: str) -> str:
     slug = unicodedata.normalize("NFKD", interview.person).encode("ascii", "ignore").decode()
     slug = re.sub(r"[^A-Za-z0-9]+", "-", slug).strip("-").lower()[:40] or "person"
@@ -63,6 +78,8 @@ def to_markdown(interview: Interview) -> str:
                 lines += [f"_Status: {STATUS_LABEL[answer.status]}_", ""]
             lines.append(answer.notiz.strip() or "_(keine Notiz)_")
     lines += ["", "## Gesamtnotiz", "", interview.gesamtnotiz.strip() or "_(keine Gesamtnotiz)_", ""]
+    for name, text in transcripts(interview):
+        lines += [f"## Transkript: {name}", "", text, ""]
     return "\n".join(lines)
 
 
@@ -87,6 +104,8 @@ def csv_rows(interview: Interview) -> list[list[str]]:
             "ja" if question["pflicht"] else "nein", answer.status, answer.notiz,
         ])
     rows.append(base + ["", "", "Gesamtnotiz", "", interview.status, interview.gesamtnotiz])
+    for name, text in transcripts(interview):
+        rows.append(base + ["", "Transkript", name, "", "transkript", text])
     return [[_csv_safe(cell) for cell in row] for row in rows]
 
 
@@ -116,6 +135,7 @@ def to_html(interview: Interview) -> str:
         "table.meta td { padding: 1pt 10pt 1pt 0; vertical-align: top; } table.meta td:first-child { color: #666; }",
         ".note { white-space: pre-wrap; margin: 0; } .empty, .status { color: #777; font-style: italic; margin: 0 0 2pt; }",
         ".tag { font-size: 8pt; color: #175a54; font-weight: normal; }",
+        "h2.transcript { page-break-before: always; } .turn { margin: 0 0 5pt; white-space: pre-wrap; }",
         "</style></head><body>",
         f"<h1>Interview: {e(interview.person)}</h1><table class='meta'>",
     ]
@@ -134,8 +154,21 @@ def to_html(interview: Interview) -> str:
     gesamt = interview.gesamtnotiz.strip()
     parts.append("<h2>Gesamtnotiz</h2>")
     parts.append(f"<p class='note'>{e(gesamt)}</p>" if gesamt else "<p class='empty'>(keine Gesamtnotiz)</p>")
+    for name, text in transcripts(interview):
+        parts.append(f"<h2 class='transcript'>Transkript: {e(name)}</h2>")
+        for paragraph in (p.strip() for p in text.split("\n\n")):
+            if paragraph:
+                parts.append(f"<p class='turn'>{_turn_html(paragraph)}</p>")
     parts.append("</body></html>")
     return "".join(parts)
+
+
+def _turn_html(paragraph: str) -> str:
+    """Absatz aus dem Skript: „**[00:01:02] Name:** Text“ – nur dieses Fett wird übernommen, sonst alles escaped."""
+    match = re.match(r"\*\*(.+?)\*\*\s*(.*)", paragraph, re.S)
+    if match:
+        return f"<b>{html.escape(match.group(1))}</b> {html.escape(match.group(2))}"
+    return html.escape(paragraph)
 
 
 def to_pdf(interview: Interview) -> bytes:

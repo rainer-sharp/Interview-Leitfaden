@@ -8,6 +8,7 @@ from app.models import Answer, Interview, Questionnaire
 from app.services import audit
 from app.services import export
 from app.services import interviews as service
+from app.services import transcription
 
 router = APIRouter(prefix="/interviews")
 
@@ -30,7 +31,12 @@ def summary(interview: Interview) -> dict:
 
 
 def detail(interview: Interview) -> dict:
-    return {**summary(interview), "gesamtnotiz": interview.gesamtnotiz, "answers": interview.answers}
+    return {
+        **summary(interview),
+        "gesamtnotiz": interview.gesamtnotiz,
+        "answers": interview.answers,
+        "aufnahmen": interview.recordings,
+    }
 
 
 def _require_running(interview: Interview) -> None:
@@ -77,6 +83,7 @@ def delete_interview(interview_id: int, db: Db):
     audit.log(db, "interview", interview.id, "geloescht")
     db.delete(interview)
     db.commit()
+    transcription.remove_interview_files(interview_id)
     return Response(status_code=204)
 
 

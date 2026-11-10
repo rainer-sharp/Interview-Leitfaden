@@ -10,15 +10,22 @@ from app.api.backup import router as backup_router
 from app.api.catalogs import router as catalogs_router
 from app.api.imports import router as imports_router
 from app.api.interviews import router as interviews_router
+from app.api.recordings import router as recordings_router
+from app.api.settings import router as settings_router
 from app.config import get_settings, validate_secrets
+from app.services.transcription import worker
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    validate_secrets(get_settings())
+    settings = get_settings()
+    validate_secrets(settings)
+    if settings.transcription_worker:
+        worker.start()
     yield
+    worker.stop()
 
 
 # Swagger/ReDoc bleiben aus: sie laden Skripte von externen CDNs (SPEC: keine externen CDNs).
@@ -45,7 +52,9 @@ def health() -> dict[str, str]:
 
 
 app.include_router(auth_router, prefix="/api")
-for protected in (catalogs_router, imports_router, interviews_router, backup_router):
+for protected in (
+    catalogs_router, imports_router, interviews_router, recordings_router, settings_router, backup_router
+):
     app.include_router(protected, prefix="/api", dependencies=[Depends(require_auth)])
 
 if (STATIC_DIR / "assets").is_dir():

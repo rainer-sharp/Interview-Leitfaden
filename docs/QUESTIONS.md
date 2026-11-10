@@ -31,3 +31,21 @@ Gesammelt bei der Umsetzung der Pakete 1–10. Die Punkte unter „Annahmen“ s
    App-Port offen ist.
 10. **Antwort-Typen** (Skala, Ja/Nein, Auswahl) werden importiert und angezeigt, erfasst wird in Version 1 aber
     immer eine Freitext-Notiz (laut SPEC erst Version 2).
+
+## Paket 11: Audio-Aufnahme und Transkription (aus ki-prompt.md, nicht in der SPEC)
+
+11. **Skript „importieren“:** `transcribe_interview.py` liegt als unveränderte Kopie in `backend/app/services/`,
+    weil der Container nur das Repo sieht. Der Adapter setzt die Modulvariablen (`SERVER_URL`, `MODEL_NAME`,
+    `API_KEY`), fängt `sys.exit` ab und leitet `print` ins Auftragsprotokoll um. Alternative wäre ein
+    gemeinsames Paket für beide Projekte.
+12. **Neue Tabellen** `recording` (mehrere Aufnahmen je Interview möglich, z. B. bei unterbrochener OBS-Aufnahme)
+    und `setting` (Schlüssel/Wert für die Server-Konfiguration). Migration `0002`.
+13. **„Ins Interview eintragen“:** Das Transkript gehört zur Aufnahme, wird im Abschluss-Bildschirm angezeigt, ist
+    dort korrigierbar und steht in allen Exporten unter „Transkript“. Es wird **nicht** auf die einzelnen Fragen
+    verteilt und nicht in die Gesamtnotiz kopiert. Eine Zuordnung Transkript→Frage wäre ein eigenes Paket
+    (z. B. per LLM, SPEC Version 2).
+14. **Abgeschlossene Interviews:** Aufnahmen und Transkripte bleiben änderbar, weil die Aufnahme meist erst nach
+    dem Gespräch hochgeladen wird. Notizen bleiben schreibgeschützt.
+15. **Gesprächspartner-Name** im Transkript ist ohne Angabe die interviewte Person (Feld `person`).
+16. **Hintergrund-Thread statt Job-Queue:** ein Thread im App-Prozess, ein Auftrag gleichzeitig, Status in der DB.
+    Reicht für einen uvicorn-Prozess; bei mehreren Workern müsste der Auftrag per DB-Sperre vergeben werden.

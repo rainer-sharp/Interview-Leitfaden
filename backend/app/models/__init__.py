@@ -1,6 +1,6 @@
 from datetime import date, datetime, timezone
 
-from sqlalchemy import JSON, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, BigInteger, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -72,6 +72,9 @@ class Interview(Base):
     answers: Mapped[list["Answer"]] = relationship(
         back_populates="interview", cascade="all, delete-orphan", order_by="Answer.position"
     )
+    recordings: Mapped[list["Recording"]] = relationship(
+        back_populates="interview", cascade="all, delete-orphan", order_by="Recording.id"
+    )
 
 
 class Answer(Base):
@@ -86,6 +89,38 @@ class Answer(Base):
     geaendert_am: Mapped[datetime] = mapped_column(DateTime, default=now)
 
     interview: Mapped[Interview] = relationship(back_populates="answers")
+
+
+class Recording(Base):
+    """Audio-Aufnahme eines Interviews; die Datei liegt unter AUDIO_DIR, hier nur der relative Pfad."""
+
+    __tablename__ = "recording"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    interview_id: Mapped[int] = mapped_column(ForeignKey("interview.id", ondelete="CASCADE"), index=True)
+    dateiname: Mapped[str] = mapped_column(String(255))  # Originalname beim Hochladen
+    pfad: Mapped[str] = mapped_column(String(255))  # relativ zu AUDIO_DIR
+    groesse: Mapped[int] = mapped_column(BigInteger, default=0)
+    hochgeladen_am: Mapped[datetime] = mapped_column(DateTime, default=now)
+    # keine | wartend | laeuft | fertig | fehler
+    transkript_status: Mapped[str] = mapped_column(String(20), default="keine")
+    transkript_optionen: Mapped[dict] = mapped_column(JSON, default=dict)
+    transkript: Mapped[str] = mapped_column(Text, default="")
+    transkript_fehler: Mapped[str] = mapped_column(Text, default="")
+    transkript_log: Mapped[str] = mapped_column(Text, default="")
+    transkript_start: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    transkript_ende: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    interview: Mapped[Interview] = relationship(back_populates="recordings")
+
+
+class Setting(Base):
+    """Einstellungen, die in der App geändert werden können (Schlüssel/Wert)."""
+
+    __tablename__ = "setting"
+
+    schluessel: Mapped[str] = mapped_column(String(100), primary_key=True)
+    wert: Mapped[str] = mapped_column(Text, default="")
 
 
 class AuditLog(Base):

@@ -9,9 +9,10 @@ RUN npm run build
 # Stage 2: Laufzeit
 FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
-# libharfbuzz-subset0 und Schriften braucht WeasyPrint fuer den PDF-Export (siehe docs/QUESTIONS.md)
+# libharfbuzz-subset0 und Schriften braucht WeasyPrint fuer den PDF-Export (siehe docs/QUESTIONS.md),
+# ffmpeg (inkl. ffprobe) braucht transcribe_interview.py zum Zerlegen der Audiospuren
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core curl \
+      libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core curl ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY backend/requirements.txt .
