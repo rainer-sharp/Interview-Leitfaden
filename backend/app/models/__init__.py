@@ -75,6 +75,9 @@ class Interview(Base):
     recordings: Mapped[list["Recording"]] = relationship(
         back_populates="interview", cascade="all, delete-orphan", order_by="Recording.id"
     )
+    evaluation: Mapped["Evaluation | None"] = relationship(
+        back_populates="interview", cascade="all, delete-orphan", uselist=False
+    )
 
 
 class Answer(Base):
@@ -112,6 +115,25 @@ class Recording(Base):
     transkript_ende: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     interview: Mapped[Interview] = relationship(back_populates="recordings")
+
+
+class Evaluation(Base):
+    """KI-Bewertung eines Interviews (Zusammenfassung und Gesamteinschätzung), höchstens eine je Interview."""
+
+    __tablename__ = "evaluation"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    interview_id: Mapped[int] = mapped_column(ForeignKey("interview.id", ondelete="CASCADE"), unique=True)
+    status: Mapped[str] = mapped_column(String(20), default="wartend")  # wartend | laeuft | fertig | fehler
+    text: Mapped[str] = mapped_column(Text, default="")
+    fehler: Mapped[str] = mapped_column(Text, default="")
+    modell: Mapped[str] = mapped_column(String(300), default="")
+    mit_transkript: Mapped[bool] = mapped_column(default=False)
+    bearbeitet: Mapped[bool] = mapped_column(default=False)  # von Hand korrigiert
+    gestartet_am: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    fertig_am: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    interview: Mapped[Interview] = relationship(back_populates="evaluation")
 
 
 class Setting(Base):

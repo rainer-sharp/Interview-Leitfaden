@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { api } from '../api'
-import type { ServerCheck, TranscriptionMode, TranscriptionSettings } from '../types'
+import type { LlmCheck, LlmSettings, ServerCheck, TranscriptionMode, TranscriptionSettings } from '../types'
 
 const current = ref<TranscriptionSettings | null>(null)
 const form = reactive({ url: '', model: '', api_key: '', modus: 'mix' as TranscriptionMode, name_ich: '', begriffe: '' })
@@ -55,9 +55,60 @@ async function test() {
   }
 }
 
+// ------------------------------------------------------------------ LLM für die KI-Bewertung
+const llm = ref<LlmSettings | null>(null)
+const llmForm = reactive({ url: '', model: '', api_key: '', anweisung: '' })
+const llmRemoveKey = ref(false)
+const llmMessage = ref('')
+const llmCheck = ref<LlmCheck | null>(null)
+const llmChecking = ref(false)
+
+function fillLlm(values: LlmSettings) {
+  llm.value = values
+  Object.assign(llmForm, { ...values, api_key: '' })
+  llmRemoveKey.value = false
+}
+
+function llmPayload() {
+  const body: Record<string, string> = { url: llmForm.url.trim(), model: llmForm.model.trim(), anweisung: llmForm.anweisung }
+  if (llmRemoveKey.value) body.api_key = ''
+  else if (llmForm.api_key.trim()) body.api_key = llmForm.api_key.trim()
+  return body
+}
+
+async function saveLlm() {
+  error.value = llmMessage.value = ''
+  try {
+    fillLlm(await api.put<LlmSettings>('/einstellungen/llm', llmPayload()))
+    llmMessage.value = 'Gespeichert.'
+  } catch (e) {
+    error.value = (e as Error).message
+  }
+}
+
+async function testLlm() {
+  error.value = llmMessage.value = ''
+  llmCheck.value = null
+  llmChecking.value = true
+  try {
+    const { url, model, api_key } = llmPayload()
+    llmCheck.value = await api.post<LlmCheck>('/einstellungen/llm/test', { url, model, api_key: api_key || undefined })
+  } catch (e) {
+    error.value = (e as Error).message
+  } finally {
+    llmChecking.value = false
+  }
+}
+
+function resetInstructions() {
+  // Leer gespeichert = Vorgabe; der Server liefert sie beim Speichern wieder aus.
+  llmForm.anweisung = ''
+}
+
 onMounted(async () => {
   try {
     fill(await api.get<TranscriptionSettings>('/einstellungen/transkription'))
+    fillLlm(await api.get<LlmSettings>('/einstellungen/llm'))
   } catch (e) {
     error.value = (e as Error).message
   }
@@ -69,7 +120,7 @@ onMounted(async () => {
     <h1 class="page-title">Einstellungen</h1>
     <p v-if="error" class="error-box" role="alert">{{ error }}</p>
 
-    <form v-if="current" class="card space-y-4" @submit.prevent="save">
+    <form v-if="current" class="card space-y-4" data-testid="settings-transcription" @submit.prevent="save">
       <div>
         <h2 class="font-semibold">Transkriptions-Server</h2>
         <p class="muted">
@@ -149,6 +200,70 @@ onMounted(async () => {
       <div class="flex flex-wrap items-center gap-3">
         <button type="submit" class="btn btn-primary">Speichern</button>
         <span v-if="message" class="text-sm text-accent-800" role="status">{{ message }}</span>
+      </div>
+    </form>
+
+    <form v-if="llm" class="card space-y-4" data-testid="settings-llm" @submit.prevent="saveLlm">
+      <div>
+        <h2 class="font-semibold">LLM-Server für die KI-Bewertung</h2>
+        <p class="muted">
+          OpenAI-kompatibler Endpunkt (z. B. vLLM). Ohne Modell wird das erste Modell genommen, das der Server anbietet.
+          Leere Felder fallen auf die Vorgabe aus der <code>.env</code> (<code>LLM_URL</code>, <code>LLM_MODEL</code>,
+          <code>LLM_API_KEY</code>) zurück.
+        </p>
+      </div>
+      <div>
+        <label class="label" for="llm-url">Server-URL</label>
+        <input id="llm-url" v-model="llmForm.url" class="input" placeholder="http://192.168.101.94:8000/v1" />
+      </div>
+      <div>
+        <label class="label" for="llm-model">Modell</label>
+        <input id="llm-model" v-model="llmForm.model" class="input" list="llm-modelle" placeholder="automatisch" />
+        <datalist id="llm-modelle">
+          <option v-for="m in llmCheck?.modelle ?? []" :key="m" :value="m" />
+        </datalist>
+      </div>
+      <div>
+        <label class="label" for="llm-api-key">API-Schlüssel</label>
+        <input
+          id="llm-api-key"
+          v-model="llmForm.api_key"
+          type="password"
+          class="input"
+          autocomplete="off"
+          :placeholder="llm.api_key_gesetzt ? 'gesetzt – leer lassen, um ihn zu behalten' : 'keiner (lokaler Server)'"
+          :disabled="llmRemoveKey"
+        />
+        <label v-if="llm.api_key_gesetzt" class="mt-1 flex items-center gap-2 text-sm">
+          <input v-model="llmRemoveKey" type="checkbox" /> Schlüssel entfernen
+        </label>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" class="btn" :disabled="llmChecking" @click="testLlm">
+          {{ llmChecking ? 'Prüfe …' : 'Verbindung testen' }}
+        </button>
+        <span
+          v-if="llmCheck"
+          class="text-sm"
+          :class="llmCheck.ok ? 'text-accent-800' : 'text-red-800'"
+          data-testid="llm-check"
+          role="status"
+          >{{ llmCheck.meldung }}</span
+        >
+      </div>
+      <div>
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <label class="label" for="llm-anweisung">Anweisung an das Modell (System-Prompt)</label>
+          <button v-if="llm.anweisung_angepasst" type="button" class="link text-sm" @click="resetInstructions">
+            Vorgabe wiederherstellen
+          </button>
+        </div>
+        <textarea id="llm-anweisung" v-model="llmForm.anweisung" class="input min-h-72 font-mono text-sm"></textarea>
+        <p class="muted mt-1">Legt Aufbau und Maßstab der Bewertung fest. Leer speichern = Vorgabe.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button type="submit" class="btn btn-primary">Speichern</button>
+        <span v-if="llmMessage" class="text-sm text-accent-800" role="status">{{ llmMessage }}</span>
       </div>
     </form>
   </main>

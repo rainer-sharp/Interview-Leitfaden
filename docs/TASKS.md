@@ -13,6 +13,7 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“). Abw
 - [x] 9 Abschluss + Export Markdown/PDF/CSV
 - [x] 10 Admin-Passwort, Backup-Endpunkt, README
 - [x] 11 Audio-Aufnahme je Interview, Transkription über transcribe_interview.py, Server-Einstellungen (ki-prompt.md)
+- [x] 12 KI-Bewertung je Interview (Zusammenfassung inkl. Transkript) per LLM, Download PDF/Markdown, LLM-Einstellungen
 
 ## Offen
 
@@ -25,4 +26,8 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“). Abw
   Bitte im Container eine kurze OBS-Aufnahme transkribieren.
 - Paket 11: Audiodateien sind nicht im Backup-ZIP (Größe). Kein Abbrechen laufender Transkriptionen (die Anfrage an
   den Server lässt sich nicht unterbrechen); Löschen der Aufnahme verwirft das Ergebnis.
-- Version 2 laut SPEC: Folgefragen, Antwort-Typen, Zeitmessung, Gruppenauswertung, Rollen, LLM-Zusammenfassung.
+- Paket 12: Live gegen 192.168.101.94:8000 geprüft (Modell automatisch erkannt, ~1 min, PDF/MD-Download). E2E
+  (`e2e/evaluation.spec.ts`) lief hier aus demselben Grund wie in Paket 11 nicht (libatk fehlt). Kein Abbrechen der
+  laufenden LLM-Anfrage; „Abbrechen“ verwirft nur das Ergebnis.
+- Version 2 laut SPEC: Folgefragen, Antwort-Typen, Zeitmessung, Gruppenauswertung, Rollen. (LLM-Zusammenfassung je
+  Interview: Paket 12; über mehrere Interviews einer Gruppe noch offen.)

@@ -260,9 +260,21 @@ def requeue_interrupted() -> int:
 
 
 class Worker:
-    """Ein Thread, der wartende Aufträge nacheinander abarbeitet. notify() weckt ihn sofort."""
+    """Ein Thread, der wartende Aufträge nacheinander abarbeitet. notify() weckt ihn sofort.
 
-    def __init__(self) -> None:
+    process() erledigt einen Auftrag und liefert False, wenn keiner wartet; recover() reiht beim Start
+    abgebrochene Aufträge wieder ein. Die KI-Bewertung nutzt dieselbe Klasse mit eigenen Funktionen.
+    """
+
+    def __init__(
+        self,
+        process: Callable[[], bool] | None = None,
+        recover: Callable[[], int] | None = None,
+        name: str = "transkription",
+    ) -> None:
+        self._process = process or (lambda: process_next())
+        self._recover = recover or requeue_interrupted
+        self._name = name
         self._wake = threading.Event()
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
@@ -270,9 +282,9 @@ class Worker:
     def start(self) -> None:
         if self._thread and self._thread.is_alive():
             return
-        requeue_interrupted()
+        self._recover()
         self._stop.clear()
-        self._thread = threading.Thread(target=self._run, name="transkription", daemon=True)
+        self._thread = threading.Thread(target=self._run, name=self._name, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
@@ -286,10 +298,10 @@ class Worker:
         while not self._stop.is_set():
             self._wake.clear()
             try:
-                while not self._stop.is_set() and process_next():
+                while not self._stop.is_set() and self._process():
                     pass
             except Exception:  # noqa: BLE001 – z. B. DB kurz gesperrt; der Thread darf nicht sterben
-                logger.exception("Fehler im Transkriptions-Worker")
+                logger.exception("Fehler im Hintergrund-Thread %s", self._name)
             self._wake.wait(timeout=60)
 
 

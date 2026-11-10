@@ -57,6 +57,31 @@ def transcripts(interview: Interview) -> list[tuple[str, str]]:
     return result
 
 
+def evaluation_text(interview: Interview) -> str:
+    """Letzte fertige Bewertung; sie bleibt stehen, solange eine neue läuft oder fehlschlägt."""
+    evaluation = interview.evaluation
+    return evaluation.text.strip() if evaluation is not None else ""
+
+
+def evaluation_note(interview: Interview) -> str:
+    """Herkunftsvermerk, z. B. „Erstellt am 10.11.2026 14:03 mit modell-a, mit Transkript, von Hand überarbeitet“."""
+    evaluation = interview.evaluation
+    parts = []
+    if evaluation.fertig_am:
+        parts.append(f"Erstellt am {evaluation.fertig_am.strftime('%d.%m.%Y %H:%M')} UTC")
+    if evaluation.modell:
+        parts.append(f"mit {evaluation.modell}")
+    parts.append("mit Transkript" if evaluation.mit_transkript else "nur aus den Notizen")
+    if evaluation.bearbeitet:
+        parts.append("von Hand überarbeitet")
+    return "KI-generiert – bitte prüfen. " + ", ".join(parts) + "."
+
+
+def _demote(markdown: str, levels: int) -> str:
+    """Überschriften der LLM-Antwort unter die Export-Überschrift einordnen (## → ###)."""
+    return re.sub(r"^(#{1,6}) ", lambda m: "#" * min(6, len(m.group(1)) + levels) + " ", markdown, flags=re.M)
+
+
 def filename(interview: Interview, extension: str) -> str:
     slug = unicodedata.normalize("NFKD", interview.person).encode("ascii", "ignore").decode()
     slug = re.sub(r"[^A-Za-z0-9]+", "-", slug).strip("-").lower()[:40] or "person"
@@ -78,6 +103,8 @@ def to_markdown(interview: Interview) -> str:
                 lines += [f"_Status: {STATUS_LABEL[answer.status]}_", ""]
             lines.append(answer.notiz.strip() or "_(keine Notiz)_")
     lines += ["", "## Gesamtnotiz", "", interview.gesamtnotiz.strip() or "_(keine Gesamtnotiz)_", ""]
+    if evaluation := evaluation_text(interview):
+        lines += ["## KI-Bewertung", "", f"_{evaluation_note(interview)}_", "", _demote(evaluation, 1), ""]
     for name, text in transcripts(interview):
         lines += [f"## Transkript: {name}", "", text, ""]
     return "\n".join(lines)
@@ -104,6 +131,8 @@ def csv_rows(interview: Interview) -> list[list[str]]:
             "ja" if question["pflicht"] else "nein", answer.status, answer.notiz,
         ])
     rows.append(base + ["", "", "Gesamtnotiz", "", interview.status, interview.gesamtnotiz])
+    if evaluation := evaluation_text(interview):
+        rows.append(base + ["", "KI-Bewertung", interview.evaluation.modell, "", "ki-bewertung", evaluation])
     for name, text in transcripts(interview):
         rows.append(base + ["", "Transkript", name, "", "transkript", text])
     return [[_csv_safe(cell) for cell in row] for row in rows]
@@ -122,21 +151,31 @@ def to_csv(interview: Interview) -> str:
     return write_csv(csv_rows(interview))
 
 
+_STYLE = [
+    "@page { size: A4; margin: 2cm 2cm 2.2cm; "
+    "@bottom-right { content: 'Seite ' counter(page) ' von ' counter(pages); font-size: 8pt; color: #777; } }",
+    "body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; line-height: 1.45; color: #1c1f1e; }",
+    "h1 { font-size: 17pt; margin: 0 0 8pt; } h2 { font-size: 12.5pt; color: #175a54; margin: 18pt 0 4pt;"
+    " border-bottom: 0.5pt solid #ccc; padding-bottom: 2pt; }",
+    "h3 { font-size: 10.5pt; margin: 10pt 0 3pt; page-break-after: avoid; }",
+    "h4 { font-size: 10pt; margin: 8pt 0 2pt; page-break-after: avoid; }",
+    "table.meta td { padding: 1pt 10pt 1pt 0; vertical-align: top; } table.meta td:first-child { color: #666; }",
+    ".note { white-space: pre-wrap; margin: 0; } .empty, .status { color: #777; font-style: italic; margin: 0 0 2pt; }",
+    ".tag { font-size: 8pt; color: #175a54; font-weight: normal; }",
+    "h2.transcript { page-break-before: always; } .turn { margin: 0 0 5pt; white-space: pre-wrap; }",
+    ".ki p, .ki li { margin: 0 0 4pt; } .ki ul, .ki ol { margin: 0 0 6pt; padding-left: 14pt; }",
+    ".ki-note { color: #777; font-size: 8.5pt; font-style: italic; }",
+]
+
+
+def _head() -> str:
+    return "<!doctype html><html lang='de'><head><meta charset='utf-8'><style>" + "".join(_STYLE) + "</style></head><body>"
+
+
 def to_html(interview: Interview) -> str:
     e = html.escape
     parts = [
-        "<!doctype html><html lang='de'><head><meta charset='utf-8'><style>",
-        "@page { size: A4; margin: 2cm 2cm 2.2cm; "
-        "@bottom-right { content: 'Seite ' counter(page) ' von ' counter(pages); font-size: 8pt; color: #777; } }",
-        "body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; line-height: 1.45; color: #1c1f1e; }",
-        "h1 { font-size: 17pt; margin: 0 0 8pt; } h2 { font-size: 12.5pt; color: #175a54; margin: 18pt 0 4pt;"
-        " border-bottom: 0.5pt solid #ccc; padding-bottom: 2pt; }",
-        "h3 { font-size: 10.5pt; margin: 10pt 0 3pt; page-break-after: avoid; }",
-        "table.meta td { padding: 1pt 10pt 1pt 0; vertical-align: top; } table.meta td:first-child { color: #666; }",
-        ".note { white-space: pre-wrap; margin: 0; } .empty, .status { color: #777; font-style: italic; margin: 0 0 2pt; }",
-        ".tag { font-size: 8pt; color: #175a54; font-weight: normal; }",
-        "h2.transcript { page-break-before: always; } .turn { margin: 0 0 5pt; white-space: pre-wrap; }",
-        "</style></head><body>",
+        _head(),
         f"<h1>Interview: {e(interview.person)}</h1><table class='meta'>",
     ]
     parts += [f"<tr><td>{e(label)}</td><td>{e(value)}</td></tr>" for label, value in _meta(interview)]
@@ -154,6 +193,10 @@ def to_html(interview: Interview) -> str:
     gesamt = interview.gesamtnotiz.strip()
     parts.append("<h2>Gesamtnotiz</h2>")
     parts.append(f"<p class='note'>{e(gesamt)}</p>" if gesamt else "<p class='empty'>(keine Gesamtnotiz)</p>")
+    if evaluation := evaluation_text(interview):
+        parts.append("<h2>KI-Bewertung</h2>")
+        parts.append(f"<p class='ki-note'>{e(evaluation_note(interview))}</p>")
+        parts.append(f"<div class='ki'>{markdown_html(_demote(evaluation, 2))}</div>")
     for name, text in transcripts(interview):
         parts.append(f"<h2 class='transcript'>Transkript: {e(name)}</h2>")
         for paragraph in (p.strip() for p in text.split("\n\n")):
@@ -171,11 +214,89 @@ def _turn_html(paragraph: str) -> str:
     return html.escape(paragraph)
 
 
-def to_pdf(interview: Interview) -> bytes:
+def _inline(text: str) -> str:
+    """Escaped Text mit **fett**, *kursiv*/_kursiv_ und `code`."""
+    text = html.escape(text)
+    text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
+    text = re.sub(r"(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])", r"<i>\1</i>", text)
+    text = re.sub(r"(?<!\w)_(?!\s)(.+?)(?<!\s)_(?!\w)", r"<i>\1</i>", text)
+    return re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
+
+
+def markdown_html(markdown: str) -> str:
+    """Kleiner Markdown-Umsetzer für die LLM-Antwort: Überschriften, Listen, Absätze, Hervorhebungen.
+    Bewusst ohne Bibliothek; rohes HTML aus der Antwort wird immer escaped."""
+    out: list[str] = []
+    paragraph: list[str] = []
+    list_tag = ""
+
+    def flush() -> None:
+        nonlocal list_tag
+        if paragraph:
+            out.append(f"<p>{'<br>'.join(_inline(line) for line in paragraph)}</p>")
+            paragraph.clear()
+        if list_tag:
+            out.append(f"</{list_tag}>")
+            list_tag = ""
+
+    for raw in markdown.splitlines():
+        line = raw.strip()
+        heading = re.match(r"(#{1,6})\s+(.*)", line)
+        bullet = re.match(r"[-*+]\s+(.*)", line)
+        numbered = re.match(r"\d+[.)]\s+(.*)", line)
+        if not line or re.fullmatch(r"[-*_]{3,}", line):
+            flush()
+        elif heading:
+            flush()
+            level = min(6, len(heading.group(1)))
+            out.append(f"<h{level}>{_inline(heading.group(2))}</h{level}>")
+        elif bullet or numbered:
+            tag = "ul" if bullet else "ol"
+            if paragraph or list_tag != tag:
+                flush()
+                out.append(f"<{tag}>")
+                list_tag = tag
+            out.append(f"<li>{_inline((bullet or numbered).group(1))}</li>")
+        elif list_tag and raw[:1] in (" ", "\t"):  # eingerückte Fortsetzung eines Listenpunkts
+            out[-1] = out[-1].removesuffix("</li>") + " " + _inline(line) + "</li>"
+        else:
+            if list_tag:
+                flush()
+            paragraph.append(line)
+    flush()
+    return "".join(out)
+
+
+def evaluation_markdown(interview: Interview) -> str:
+    lines = [f"# KI-Bewertung: Interview mit {interview.person}", ""]
+    lines += [f"- **{label}:** {value}" for label, value in _meta(interview)]
+    lines += ["", f"_{evaluation_note(interview)}_", "", interview.evaluation.text.strip(), ""]
+    return "\n".join(lines)
+
+
+def evaluation_html(interview: Interview) -> str:
+    e = html.escape
+    parts = [_head(), f"<h1>KI-Bewertung: Interview mit {e(interview.person)}</h1><table class='meta'>"]
+    parts += [f"<tr><td>{e(label)}</td><td>{e(value)}</td></tr>" for label, value in _meta(interview)]
+    parts.append(f"</table><p class='ki-note'>{e(evaluation_note(interview))}</p>")
+    parts.append(f"<div class='ki'>{markdown_html(interview.evaluation.text.strip())}</div>")
+    parts.append("</body></html>")
+    return "".join(parts)
+
+
+def _pdf(document: str) -> bytes:
     from weasyprint import HTML  # spät importieren: lädt Pango, nur wenn wirklich ein PDF gebraucht wird
 
     # Kein Zugriff auf Dateien oder Netz aus dem Dokument heraus
     def deny(url: str, *args, **kwargs):
         raise ValueError(f"Externe Ressource blockiert: {url}")
 
-    return HTML(string=to_html(interview), url_fetcher=deny).write_pdf()
+    return HTML(string=document, url_fetcher=deny).write_pdf()
+
+
+def to_pdf(interview: Interview) -> bytes:
+    return _pdf(to_html(interview))
+
+
+def evaluation_pdf(interview: Interview) -> bytes:
+    return _pdf(evaluation_html(interview))

@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 import InterviewSummaryPane from '../components/InterviewSummaryPane.vue'
+import EvaluationPanel from '../components/EvaluationPanel.vue'
 import RecordingsPanel from '../components/RecordingsPanel.vue'
 import StatusDot from '../components/StatusDot.vue'
 import { firstOpenIndex, formatDate, shortcutFor, statusAfterNote, STATUS_LABEL } from '../stores/interviewState'
@@ -300,6 +301,7 @@ onBeforeUnmount(() => {
             :recordings="interview.aufnahmen"
             @changed="interview.aufnahmen = $event"
           />
+          <EvaluationPanel :interview-id="id" :recordings="interview.aufnahmen" />
         </InterviewSummaryPane>
 
         <article v-else-if="current" class="mx-auto max-w-3xl space-y-5" data-testid="question-screen">

@@ -46,6 +46,10 @@ und `ADMIN_PASSWORD` startet sie bewusst nicht. Einen guten Schlüssel erzeugt z
    Transkriptions-Server; der Fortschritt erscheint im Protokoll, die Seite darf dabei geschlossen werden. Das
    fertige Transkript (Dialog mit Zeitstempeln) steht unter der Aufnahme, lässt sich korrigieren und ist Teil der
    Exporte (Markdown, PDF, CSV).
+8. **KI-Bewertung** (im Abschluss-Bildschirm unter dem Transkript): „Interview bewerten“ schickt Fragen, Notizen,
+   Gesamtnotiz und – falls vorhanden – die Transkripte an ein LLM. Ergebnis: Zusammenfassung, Kernaussagen,
+   Gesamtbewertung mit Einstufung, Abweichungen/Lücken, offene Punkte. Es lässt sich korrigieren, als PDF oder
+   Markdown herunterladen und steht zusätzlich in den Interview-Exporten unter „KI-Bewertung“.
 
 Tastenkürzel im Interview: `Strg+Enter` weiter · `Strg+←` zurück · `Strg+S` überspringen (auf dem Mac auch mit `⌘`).
 
@@ -76,15 +80,28 @@ hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn 
   unterbrochene Aufträge wiederholt.
 - Der Container braucht Netzzugriff auf den Server (LAN). `ffmpeg` ist im Image enthalten.
 
+### LLM-Server (KI-Bewertung)
+
+- Vorgabe: `http://192.168.101.94:8000/v1` (vLLM). Ohne eingestelltes Modell nimmt die App das erste Modell, das der
+  Server unter `/models` anbietet (derzeit `nvidia/Qwen3.8-Flash-Next-FP4-Local`), ein Modellwechsel auf dem Server
+  braucht also keine Änderung in der App.
+- **Einstellungen** → „LLM-Server für die KI-Bewertung“: URL, Modell, API-Schlüssel, „Verbindung testen“ und die
+  Anweisung an das Modell (System-Prompt; legt Aufbau und Maßstab der Bewertung fest). Leere Felder fallen auf
+  `LLM_URL`, `LLM_MODEL`, `LLM_API_KEY` aus der `.env` und danach auf die Vorgaben zurück.
+- Die Bewertung läuft im Hintergrund (typisch unter einer Minute, bei langen Transkripten länger), unabhängig von
+  einer laufenden Transkription. Transkripte über 500 000 Zeichen werden gekürzt.
+
 ## Datenschutz und Sicherheit
 
 - Alle Daten liegen in `data/interviews.db`, Audio-Aufnahmen in `data/audio/<interview-id>/`. Es gibt keine
-  externen CDNs, Schriften oder Tracker. Aufnahmen gehen zur Transkription nur an den eingestellten Server.
+  externen CDNs, Schriften oder Tracker. Aufnahmen gehen zur Transkription nur an den eingestellten Server, Notizen und
+  Transkripte für die KI-Bewertung nur an den eingestellten LLM-Server – und nur, wenn jemand „Interview bewerten“
+  wählt.
 - Das Backup-ZIP und die tägliche DB-Sicherung enthalten die Transkripte, **nicht** die Audiodateien. Wer diese
   sichern will, muss `data/audio/` zusätzlich sichern.
 - Zugang mit einem Admin-Passwort, die Sitzung liegt in einem signierten HttpOnly-Cookie (14 Tage). Ändert man
   `ADMIN_PASSWORD`, werden alle Sitzungen ungültig. Nach 10 Fehlversuchen ist die Anmeldung 15 Minuten gesperrt.
-- Interviews lassen sich einzeln löschen, Notizen, Aufnahmen und Transkripte inklusive. Das Audit-Log speichert nur IDs und Aktionen, keine Inhalte.
+- Interviews lassen sich einzeln löschen, Notizen, Aufnahmen, Transkripte und KI-Bewertung inklusive. Das Audit-Log speichert nur IDs und Aktionen, keine Inhalte.
 - Hinter dem Proxy (Profil `proxy`) den App-Port nicht zusätzlich nach außen öffnen.
 
 ## Entwicklung ohne Docker

@@ -1,13 +1,23 @@
-"""Einstellungen des Transkriptions-Servers (URL, Modell, API-Schlüssel) und Vorgaben für neue Transkriptionen."""
+"""Einstellungen des Transkriptions-Servers (URL, Modell, API-Schlüssel) und Vorgaben für neue Transkriptionen;
+außerdem der LLM-Server für die KI-Bewertung."""
 from fastapi import APIRouter
 
 from app.api.deps import Db
-from app.api.schemas import ServerCheckOut, TranscriptionSettingsIn, TranscriptionSettingsOut
+from app.api.schemas import (
+    LlmCheckOut,
+    LlmSettingsIn,
+    LlmSettingsOut,
+    ServerCheckOut,
+    TranscriptionSettingsIn,
+    TranscriptionSettingsOut,
+)
 from app.services import audit
+from app.services import evaluation
 from app.services import settings as service
 from app.services import transcription
 
 router = APIRouter(prefix="/einstellungen/transkription")
+llm_router = APIRouter(prefix="/einstellungen/llm")
 
 
 def _out(values: service.TranscriptionSettings) -> dict:
@@ -40,3 +50,29 @@ def test_server(body: TranscriptionSettingsIn, db: Db):
         begriffe=saved.begriffe,
     )
     return transcription.check_server(server)
+
+
+@llm_router.get("", response_model=LlmSettingsOut)
+def get_llm(db: Db):
+    return service.llm(db).public()
+
+
+@llm_router.put("", response_model=LlmSettingsOut)
+def update_llm(body: LlmSettingsIn, db: Db):
+    values = service.update_llm(db, body.model_dump(exclude_none=True))
+    audit.log(db, "einstellungen", 0, "llm-geaendert")
+    db.commit()
+    return values.public()
+
+
+@llm_router.post("/test", response_model=LlmCheckOut)
+def test_llm(body: LlmSettingsIn, db: Db):
+    """Prüft die Werte aus dem Formular. Leeres Modell = Vorgabe (ohne LLM_MODEL: automatisch)."""
+    saved = service.llm(db)
+    server = service.LlmSettings(
+        url=body.url or saved.url,
+        model=saved.model if body.model is None else (body.model or service.default_llm_model()),
+        api_key=body.api_key or saved.api_key,
+        anweisung=saved.anweisung,
+    )
+    return evaluation.check_server(server)

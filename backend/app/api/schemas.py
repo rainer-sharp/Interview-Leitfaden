@@ -174,4 +174,44 @@ class ServerCheckOut(BaseModel):
     modelle: list[str]
 
 
+class EvaluationOut(BaseModel):
+    """status „keine“, solange das Interview nicht bewertet wurde."""
+
+    status: Literal["keine", "wartend", "laeuft", "fertig", "fehler"]
+    text: str = ""
+    fehler: str = ""
+    modell: str = ""
+    mit_transkript: bool = False
+    bearbeitet: bool = False
+    gestartet_am: datetime | None = None
+    fertig_am: datetime | None = None
+    hat_transkript: bool  # liegt jetzt ein Transkript vor (für den Hinweis vor dem Start)
+    transkription_laeuft: bool
+
+
+class EvaluationUpdate(BaseModel):
+    text: str
+
+
+class LlmSettingsOut(BaseModel):
+    url: str
+    model: str
+    api_key_gesetzt: bool
+    anweisung: str
+    anweisung_angepasst: bool
+
+
+class LlmSettingsIn(BaseModel):
+    """None = unverändert, leerer Text = zurück auf die Vorgabe."""
+
+    url: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500, pattern=r"^(|https?://\S+)$")] | None = None
+    model: Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)] | None = None
+    api_key: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None = None
+    anweisung: Annotated[str, StringConstraints(max_length=20_000)] | None = None
+
+
+class LlmCheckOut(ServerCheckOut):
+    modell: str
+
+
 InterviewOut.model_rebuild()

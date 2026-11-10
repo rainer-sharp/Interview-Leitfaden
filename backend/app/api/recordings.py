@@ -4,12 +4,11 @@ Aufnahmen und Transkripte sind auch bei abgeschlossenen Interviews änderbar: di
 Gespräch hochgeladen, und Notizen bleiben davon unberührt.
 """
 from pathlib import Path
-from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Response, UploadFile
 from fastapi.responses import FileResponse
 
-from app.api.deps import Db, get_or_404
+from app.api.deps import Db, attachment, get_or_404
 from app.api.schemas import RecordingOut, TranscriptionStart, TranscriptUpdate
 from app.config import get_settings
 from app.models import Interview, Recording
@@ -26,11 +25,6 @@ def _recording(db: Db, interview_id: int, recording_id: int) -> Recording:
     if recording.interview_id != interview_id:
         raise HTTPException(status_code=404, detail="Nicht gefunden")
     return recording
-
-
-def _attachment(name: str) -> dict[str, str]:
-    ascii_name = name.encode("ascii", "replace").decode().replace('"', "_").replace("?", "_")
-    return {"Content-Disposition": f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(name)}"}
 
 
 def _require_idle(recording: Recording) -> None:
@@ -77,7 +71,7 @@ def download(interview_id: int, recording_id: int, db: Db):
     path = transcription.file_path(recording)
     if not path.is_file():
         raise HTTPException(status_code=404, detail="Die Audiodatei fehlt im Datenverzeichnis.")
-    return FileResponse(path, media_type="application/octet-stream", headers=_attachment(recording.dateiname))
+    return FileResponse(path, media_type="application/octet-stream", headers=attachment(recording.dateiname))
 
 
 @router.delete("/{recording_id}", status_code=204)
@@ -130,4 +124,4 @@ def download_transcript(interview_id: int, recording_id: int, db: Db):
     if not recording.transkript.strip():
         raise HTTPException(status_code=404, detail="Noch kein Transkript vorhanden.")
     name = export.filename(recording.interview, "md").replace(".md", f"-transkript-{recording.id}.md")
-    return Response(recording.transkript, media_type="text/markdown; charset=utf-8", headers=_attachment(name))
+    return Response(recording.transkript, media_type="text/markdown; charset=utf-8", headers=attachment(name))

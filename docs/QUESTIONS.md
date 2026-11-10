@@ -49,3 +49,22 @@ Gesammelt bei der Umsetzung der Pakete 1–10. Die Punkte unter „Annahmen“ s
 15. **Gesprächspartner-Name** im Transkript ist ohne Angabe die interviewte Person (Feld `person`).
 16. **Hintergrund-Thread statt Job-Queue:** ein Thread im App-Prozess, ein Auftrag gleichzeitig, Status in der DB.
     Reicht für einen uvicorn-Prozess; bei mehreren Workern müsste der Auftrag per DB-Sperre vergeben werden.
+
+## Paket 12: KI-Bewertung (Auftrag aus dem Chat, SPEC Version 2 „LLM-Zusammenfassung“)
+
+17. **Ein Ergebnis je Interview** (Tabelle `evaluation`, Migration `0003`). „Neu bewerten“ ersetzt es; schlägt ein
+    neuer Lauf fehl, bleibt das vorherige Ergebnis stehen. Keine Versionshistorie.
+18. **Inhalt** der Bewertung: Zusammenfassung, Kernaussagen (mit Zeitmarken), Gesamtbewertung mit Einstufung
+    (sehr positiv … sehr kritisch), Abweichungen zwischen Notizen und Transkript, offene Punkte. Keine Punktzahl,
+    weil der Zweck der Interviews je Gruppe verschieden ist; der Maßstab lässt sich über die Anweisung (System-Prompt)
+    in den Einstellungen anpassen.
+19. **Modell automatisch:** Ohne eingestelltes Modell nimmt die App das erste unter `/models` (der Server bietet genau
+    eines an). Vorgabe-URL `http://192.168.101.94:8000/v1` steht im Code, damit es ohne `.env`-Eintrag läuft.
+20. **Transkript wird bei Start gelesen**, nicht beim Einreihen. Läuft noch eine Transkription, weist die Oberfläche
+    darauf hin, wartet aber nicht automatisch.
+21. **Download** als PDF und Markdown; zusätzlich steht die Bewertung in den Interview-Exporten (MD/PDF/CSV) und damit
+    auch im Backup-ZIP, jeweils mit Vermerk „KI-generiert – bitte prüfen“.
+22. **Eigener Hintergrund-Thread** (gleiche `Worker`-Klasse wie die Transkription), damit eine stundenlange
+    Transkription die Bewertung nicht blockiert. `TRANSCRIPTION_WORKER=0` schaltet beide ab.
+23. **Markdown → PDF** mit einem kleinen eigenen Umsetzer (Überschriften, Listen, fett/kursiv), keine neue
+    Abhängigkeit. Rohes HTML aus der LLM-Antwort wird immer escaped.

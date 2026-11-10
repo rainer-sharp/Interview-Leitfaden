@@ -16,6 +16,9 @@ class Settings:
     transcribe_model: str = ""
     transcribe_api_key: str = ""
     transcription_worker: bool = True
+    llm_url: str = ""
+    llm_model: str = ""
+    llm_api_key: str = ""
 
 
 @lru_cache
@@ -30,7 +33,12 @@ def get_settings() -> Settings:
         transcribe_url=os.environ.get("TRANSCRIBE_URL", ""),
         transcribe_model=os.environ.get("TRANSCRIBE_MODEL", ""),
         transcribe_api_key=os.environ.get("TRANSCRIBE_API_KEY", ""),
+        # Steuert beide Hintergrund-Threads (Transkription und KI-Bewertung); Tests schalten sie ab.
         transcription_worker=os.environ.get("TRANSCRIPTION_WORKER", "1") != "0",
+        # Vorgaben für die KI-Bewertung (OpenAI-kompatibler Chat-Endpunkt), in der App änderbar.
+        llm_url=os.environ.get("LLM_URL", ""),
+        llm_model=os.environ.get("LLM_MODEL", ""),
+        llm_api_key=os.environ.get("LLM_API_KEY", ""),
     )
 
 

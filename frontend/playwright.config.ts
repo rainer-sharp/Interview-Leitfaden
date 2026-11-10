@@ -25,6 +25,8 @@ export default defineConfig({
       DATABASE_URL: `sqlite:///${dataDir}/e2e.db`,
       SECRET_KEY: 'e2e-geheimnis',
       ADMIN_PASSWORD: 'e2e-passwort',
+      // Nicht erreichbar: E2E prüft nur den Ablauf bis zur Fehlermeldung, kein echtes LLM.
+      LLM_URL: 'http://127.0.0.1:9/v1',
     },
   },
 })

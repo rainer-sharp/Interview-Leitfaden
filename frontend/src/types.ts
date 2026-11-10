@@ -132,3 +132,30 @@ export interface ServerCheck {
   meldung: string
   modelle: string[]
 }
+
+export type EvaluationStatus = 'keine' | 'wartend' | 'laeuft' | 'fertig' | 'fehler'
+
+export interface Evaluation {
+  status: EvaluationStatus
+  text: string
+  fehler: string
+  modell: string
+  mit_transkript: boolean
+  bearbeitet: boolean
+  gestartet_am: string | null
+  fertig_am: string | null
+  hat_transkript: boolean
+  transkription_laeuft: boolean
+}
+
+export interface LlmSettings {
+  url: string
+  model: string
+  api_key_gesetzt: boolean
+  anweisung: string
+  anweisung_angepasst: boolean
+}
+
+export interface LlmCheck extends ServerCheck {
+  modell: string
+}
