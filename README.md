@@ -104,11 +104,10 @@ JSON: eine Liste von Objekten mit denselben Feldern, oder `{"fragen": [...]}`.
 
 ### Transkriptions-Server
 
-Transkribiert wird mit `backend/app/services/transcribe_interview.py`, einer unveränderten Kopie aus dem Projekt
-`transcription` (Nemotron-3.5-Transcribe über einen OpenAI-kompatiblen vLLM-Endpunkt). Der Adapter
-`backend/app/services/transcription.py` importiert das Skript als Modul, setzt Server, Modell und Schlüssel und
-liest dessen Markdown-Ausgabe. Änderungen am Skript im Projekt `transcription` vornehmen und die Datei danach
-hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn beide Projekte nebeneinander liegen).
+Transkribiert wird mit `backend/app/services/transcribe_interview.py` (Nemotron-3.5-Transcribe über einen
+OpenAI-kompatiblen vLLM-Endpunkt). Das Skript gehört zu diesem Projekt und läuft auch allein auf der Kommandozeile.
+Der Adapter `backend/app/services/transcription.py` importiert es als Modul, setzt Server, Modell und Schlüssel und
+liest dessen Markdown-Ausgabe.
 
 - **Einstellungen** (oben in der Navigation): Server-URL, Modell, API-Schlüssel, „Verbindung testen“ (fragt
   `/models` ab) sowie Vorgaben für Modus, Interviewer-Name und Kontextbegriffe. Gespeichert in der Datenbank; leere

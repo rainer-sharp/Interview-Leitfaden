@@ -1,7 +1,6 @@
 """Audio-Aufnahmen speichern und mit transcribe_interview.py transkribieren.
 
-transcribe_interview.py ist eine unveränderte Kopie aus dem Projekt „transcription“ und wird hier als Modul
-importiert. Das Skript hält den Server in Modulvariablen und beendet sich bei Fehlern mit sys.exit; beides fängt
+transcribe_interview.py ist ein eigenständiges Kommandozeilen-Skript, das hier als Modul importiert wird. Das Skript hält den Server in Modulvariablen und beendet sich bei Fehlern mit sys.exit; beides fängt
 dieser Adapter ab. Transkribiert wird in einem Hintergrund-Thread, immer nur eine Aufnahme gleichzeitig
 (der Server verträgt laut README nur zwei parallele Anfragen, und ein Block kann eine Stunde dauern).
 """

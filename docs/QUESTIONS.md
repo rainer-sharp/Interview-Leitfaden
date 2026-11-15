@@ -37,7 +37,8 @@ Gesammelt bei der Umsetzung der Pakete 1–10. Die Punkte unter „Annahmen“ s
 11. **Skript „importieren“:** `transcribe_interview.py` liegt als unveränderte Kopie in `backend/app/services/`,
     weil der Container nur das Repo sieht. Der Adapter setzt die Modulvariablen (`SERVER_URL`, `MODEL_NAME`,
     `API_KEY`), fängt `sys.exit` ab und leitet `print` ins Auftragsprotokoll um. Alternative wäre ein
-    gemeinsames Paket für beide Projekte.
+    gemeinsames Paket für beide Projekte. *Nachtrag 15.11.2026:* Die Kopie wird seither eigenständig in diesem
+    Projekt gepflegt, ohne Abgleich mit dem Projekt „transcription“.
 12. **Neue Tabellen** `recording` (mehrere Aufnahmen je Interview möglich, z. B. bei unterbrochener OBS-Aufnahme)
     und `setting` (Schlüssel/Wert für die Server-Konfiguration). Migration `0002`.
 13. **„Ins Interview eintragen“:** Das Transkript gehört zur Aufnahme, wird im Abschluss-Bildschirm angezeigt, ist

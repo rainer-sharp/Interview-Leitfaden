@@ -3,7 +3,6 @@ import dataclasses
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from pathlib import Path
 
 import pytest
 from sqlalchemy.orm import Session
@@ -341,14 +340,6 @@ def test_adapter_without_ffmpeg(tmp_path, monkeypatch):
     monkeypatch.setattr(transcription, "ffmpeg_available", lambda: False)
     with pytest.raises(transcription.TranscriptionError, match="ffmpeg"):
         transcription.transcribe_file(tmp_path / "a.wav", "a.wav", SERVER, transcription.Options())
-
-
-def test_vendored_script_is_unchanged():
-    """Die Kopie soll mit dem Original übereinstimmen, damit Fehlerbehebungen dort einfach übernommen werden können."""
-    original = Path("/workspace/transcription/transcribe_interview.py")
-    if not original.exists():
-        pytest.skip("Projekt transcription nicht vorhanden")
-    assert Path(script.__file__).read_bytes() == original.read_bytes()
 
 
 def test_split_terms():

@@ -21,7 +21,7 @@ Beispiele:
 """
 
 # ---------------------------------------------------------------- Konfiguration
-SERVER_URL = "http://192.168.101.95:8001/v1"
+SERVER_URL = "http://localhost:8001/v1"
 MODEL_NAME = "nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4"
 API_KEY = "EMPTY"
 
