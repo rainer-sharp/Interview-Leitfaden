@@ -18,7 +18,7 @@ async function signOut() {
       <RouterLink to="/" class="nav-link">Gruppen</RouterLink>
       <RouterLink to="/interviews" class="nav-link">Interviews</RouterLink>
       <RouterLink to="/einstellungen" class="nav-link">Einstellungen</RouterLink>
-      <a href="/api/backup" class="nav-link" download title="Datenbank und alle Interviews als ZIP">Backup</a>
+      <RouterLink to="/sicherung" class="nav-link">Sicherung</RouterLink>
       <div class="ml-auto flex items-center gap-2">
         <RouterLink to="/interviews/neu" class="btn btn-primary">Neues Interview</RouterLink>
         <button class="btn" @click="signOut">Abmelden</button>

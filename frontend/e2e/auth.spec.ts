@@ -21,7 +21,8 @@ test('ohne Anmeldung landet man auf der Login-Seite und danach am Ziel', async (
 
 test('Backup lässt sich herunterladen', async ({ page }) => {
   await login(page)
+  await page.getByRole('link', { name: 'Sicherung' }).click()
   const download = page.waitForEvent('download')
-  await page.getByRole('link', { name: 'Backup' }).click()
+  await page.getByRole('link', { name: 'Backup herunterladen' }).click()
   expect((await download).suggestedFilename()).toMatch(/^interview-backup-.*\.zip$/)
 })

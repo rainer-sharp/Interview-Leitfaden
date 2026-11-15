@@ -20,10 +20,25 @@ und `ADMIN_PASSWORD` startet sie bewusst nicht. Einen guten Schlüssel erzeugt z
 | --- | --- |
 | Mit HTTPS-Proxy (VPS, `DOMAIN` in `.env`) | `docker compose --profile proxy up -d --build` |
 | Entwicklung mit Hot-Reload | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build` → Frontend auf Port 5173 |
-| Update | `git pull && docker compose up -d --build` |
+| Update | `scripts/update.sh` (holt den Code, sichert, baut neu, prüft die laufende Version) |
 | Logs | `docker compose logs -f app` |
-| Vollsicherung als ZIP | `scripts/backup.sh` oder in der App oben auf „Backup“ |
-| Backup wiederherstellen | App stoppen, `backups/interviews-<datum>.db` nach `data/interviews.db` kopieren, starten |
+| Vollsicherung als ZIP | `scripts/backup.sh` oder in der App unter „Sicherung“ |
+| Backup wiederherstellen | in der App unter „Sicherung“ oder `scripts/restore.sh <backup.zip \| backups/interviews-<datum>.db>` |
+
+### Update
+
+`scripts/update.sh` im Repo-Verzeichnis auf dem Server. Das Skript
+
+1. holt den neuesten Stand des aktuellen Branches (`git pull --ff-only`; bricht bei lokalen Änderungen ab),
+2. legt eine Vollsicherung unter `backups/` ab,
+3. baut das Image neu und ersetzt den Container,
+4. wartet, bis die App antwortet, und prüft, dass sie den gerade gebauten Git-Stand meldet.
+
+Der laufende Stand steht unter `/api/health` (`version`) und unten auf der Seite „Sicherung“. Optionen:
+`--no-cache` (ohne Docker-Cache bauen), `--no-pull` (nur lokal neu bauen), `--no-backup`.
+
+Wichtig: Der Server baut, was in seinem Git-Checkout liegt. Neue Funktionen kommen dort erst an, wenn sie
+committet **und** gepusht sind und der Server auf dem richtigen Branch steht (`git branch`).
 
 ## Bedienung
 
@@ -90,6 +105,21 @@ hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn 
   `LLM_URL`, `LLM_MODEL`, `LLM_API_KEY` aus der `.env` und danach auf die Vorgaben zurück.
 - Die Bewertung läuft im Hintergrund (typisch unter einer Minute, bei langen Transkripten länger), unabhängig von
   einer laufenden Transkription. Transkripte über 500 000 Zeichen werden gekürzt.
+
+### Sicherung und Wiederherstellung
+
+- **Backup:** „Sicherung“ → „Backup herunterladen“ (ZIP: Datenbank, CSV je Interview, Kataloge im Importformat)
+  bzw. `scripts/backup.sh`. Zusätzlich legt der Dienst `backup` täglich `backups/interviews-<datum>.db` ab.
+- **Wiederherstellen:** „Sicherung“ → Datei wählen (Backup-ZIP oder tägliche `.db`), bestätigen. Oder auf dem
+  Server `scripts/restore.sh <datei>` (fragt nach, die App muss laufen). **Alle aktuellen Daten werden ersetzt.**
+- Vorher wird geprüft: SQLite-Datei bzw. `interviews.db` im ZIP, Integrität, Tabellen dieser App und ein bekannter
+  Datenbankstand. Ältere Backups werden danach automatisch migriert; Backups aus einer neueren App-Version werden
+  abgelehnt. Während eine Transkription oder KI-Bewertung läuft, ist Wiederherstellen gesperrt.
+- Der Stand vor jeder Wiederherstellung landet in `data/wiederherstellung/` (die letzten fünf) und lässt sich auf
+  der Seite „Sicherung“ mit „Zurückholen“ wieder einspielen.
+- Audiodateien sind nicht im Backup. Vorhandene Dateien in `data/audio/` bleiben liegen; fehlt zu einer
+  wiederhergestellten Aufnahme die Datei, meldet die Seite das (das Transkript ist trotzdem da).
+- Anmeldungen bleiben gültig (Passwort und Schlüssel stehen in der `.env`, nicht in der Datenbank).
 
 ## Datenschutz und Sicherheit
 

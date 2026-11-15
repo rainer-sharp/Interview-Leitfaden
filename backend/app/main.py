@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -52,7 +53,8 @@ async def security_headers(request: Request, call_next):
 
 @app.get("/api/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    """version = Git-Stand des Images (Build-Argument GIT_COMMIT); so lässt sich ein Update prüfen."""
+    return {"status": "ok", "version": os.environ.get("APP_VERSION", "entwicklung")}
 
 
 app.include_router(auth_router, prefix="/api")

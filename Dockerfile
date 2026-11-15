@@ -19,6 +19,9 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./
 COPY --from=frontend /build/dist ./static
+# Git-Stand des Builds (scripts/update.sh setzt ihn); erscheint unter /api/health und auf der Seite „Sicherung“.
+ARG GIT_COMMIT=unbekannt
+ENV APP_VERSION=$GIT_COMMIT
 RUN useradd -m -u 1000 app && mkdir -p /app/data && chown app /app/data
 USER app
 EXPOSE 8000

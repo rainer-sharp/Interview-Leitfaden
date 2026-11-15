@@ -4,7 +4,12 @@ import pytest
 def test_health(anon):
     response = anon.get("/api/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert response.json() == {"status": "ok", "version": "entwicklung"}
+
+
+def test_health_shows_build_version(anon, monkeypatch):
+    monkeypatch.setenv("APP_VERSION", "d3e5e46")
+    assert anon.get("/api/health").json()["version"] == "d3e5e46"
 
 
 def test_unknown_api_path_is_404_not_spa(anon):

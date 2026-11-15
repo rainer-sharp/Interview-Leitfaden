@@ -68,3 +68,16 @@ Gesammelt bei der Umsetzung der Pakete 1–10. Die Punkte unter „Annahmen“ s
     Transkription die Bewertung nicht blockiert. `TRANSCRIPTION_WORKER=0` schaltet beide ab.
 23. **Markdown → PDF** mit einem kleinen eigenen Umsetzer (Überschriften, Listen, fett/kursiv), keine neue
     Abhängigkeit. Rohes HTML aus der LLM-Antwort wird immer escaped.
+
+## Paket 13: Wiederherstellen (Auftrag aus dem Chat)
+
+24. **Quelle:** Backup-ZIP der App (darin `interviews.db`) oder die tägliche `.db` des Dienstes `backup`. Die CSVs im
+    ZIP werden nicht gelesen, sie sind nur zum Lesen ohne App gedacht.
+25. **Alles oder nichts:** Es wird die ganze Datenbank ersetzt, kein Zusammenführen einzelner Interviews.
+26. **Im laufenden Betrieb** über die SQLite-Backup-API in die geöffnete Datei, danach `alembic upgrade head`
+    im Prozess. Kein Neustart nötig; gesperrt, solange ein Auftrag „läuft“ (kleines Zeitfenster zwischen Prüfung
+    und Kopie bleibt, ein Auftrag würde dann beim Speichern seine Aufnahme nicht mehr finden oder eine falsche treffen).
+27. **Rückgängig** über automatische Sicherungskopien in `<daten>/wiederherstellung/`, die letzten fünf.
+28. **Audiodateien** bleiben unberührt: weder gelöscht (könnten zu einem späteren Restore passen) noch
+    wiederhergestellt (nicht im Backup). Verwaiste Dateien muss man bei Bedarf von Hand löschen.
+29. Navigation: Der Link „Backup“ ist jetzt die Seite „Sicherung“ mit Download, Wiederherstellen und Rückgängig.

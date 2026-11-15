@@ -159,3 +159,19 @@ export interface LlmSettings {
 export interface LlmCheck extends ServerCheck {
   modell: string
 }
+
+export interface RestoreResult {
+  gruppen: number
+  kataloge: number
+  interviews: number
+  aufnahmen: number
+  fehlende_audiodateien: number
+  stand_backup: string
+  sicherungskopie: string
+}
+
+export interface SafetyCopy {
+  name: string
+  groesse: number
+  erstellt: string
+}

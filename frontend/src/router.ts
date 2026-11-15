@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { setUnauthorizedHandler } from './api'
 import { checkSession, loggedIn } from './stores/session'
+import BackupView from './views/BackupView.vue'
 import CatalogEditorView from './views/CatalogEditorView.vue'
 import GroupsView from './views/GroupsView.vue'
 import GroupView from './views/GroupView.vue'
@@ -22,6 +23,7 @@ export const router = createRouter({
     { path: '/interviews', component: InterviewsView },
     { path: '/interviews/neu', component: InterviewStartView },
     { path: '/einstellungen', component: SettingsView },
+    { path: '/sicherung', component: BackupView },
     {
       path: '/interviews/:id',
       component: InterviewView,
