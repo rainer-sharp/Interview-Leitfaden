@@ -3,6 +3,9 @@
 Selbst gehostete Web-App, die Interviewer Frage für Frage durch ein Gespräch führt. Pro Personengruppe gibt es
 importierte Fragenkataloge, je Frage eine Notiz mit Autosave und am Ende einen Export als PDF, Markdown oder CSV.
 
+**Anleitungen:** [Installation](docs/INSTALLATION.md) (Schritt für Schritt, auch für Nicht-Entwickler) ·
+[Bedienungsanleitung](docs/BEDIENUNGSANLEITUNG.md)
+
 Die Spezifikation steht in [docs/SPEC.md](docs/SPEC.md), der Umsetzungsstand in [docs/TASKS.md](docs/TASKS.md).
 
 ## Start
@@ -18,7 +21,7 @@ und `ADMIN_PASSWORD` startet sie bewusst nicht. Einen guten Schlüssel erzeugt z
 
 | Zweck | Befehl |
 | --- | --- |
-| Mit HTTPS-Proxy (VPS, `DOMAIN` in `.env`) | `docker compose --profile proxy up -d --build` |
+| Mit HTTPS-Proxy (VPS, `DOMAIN` in `.env`) | `docker compose --profile proxy up -d --build`, dazu `APP_PORT=127.0.0.1:8080` |
 | Entwicklung mit Hot-Reload | `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build` → Frontend auf Port 5173 |
 | Update | `scripts/update.sh` (holt den Code, sichert, baut neu, prüft die laufende Version) |
 | Logs | `docker compose logs -f app` |
@@ -48,8 +51,8 @@ committet **und** gepusht sind und der Server auf dem richtigen Branch steht (`g
 0. **Projekt wählen** (Auswahl oben in der Navigation, verwalten unter „Projekte“). Ein Projekt fasst Gruppen mit
    ihren Katalogen und deren Interviews zusammen; Gruppen, Interviews und „Interview starten“ zeigen immer das
    aktuelle Projekt. „Kopieren“ legt ein neues Projekt mit Kopien aller Gruppen, Kataloge und Fragen an (ohne
-   Interviews), z. B. für die nächste Befragungsrunde. Unter „Bearbeiten“ lässt sich je Projekt eine eigene
-   Anweisung für die KI-Bewertung festlegen. Daten aus der Zeit vor den Projekten liegen im „Standardprojekt“; eine
+   Interviews), z. B. für die nächste Befragungsrunde. Unter „Details“ lassen sich je Projekt eigene
+   Anweisungen für die KI festlegen. Daten aus der Zeit vor den Projekten liegen im „Standardprojekt“; eine
    Gruppe lässt sich mit allen Interviews in ein anderes Projekt verschieben (Gruppe → Bearbeiten → Projekt).
    Unter Projekte → **Details**:
    - **Alle Interviews als eine Datei**: Markdown oder JSON mit Fragen, Notizen, Gesamtnotiz, KI-Bewertung und
@@ -150,7 +153,8 @@ hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn 
 - Zugang mit einem Admin-Passwort, die Sitzung liegt in einem signierten HttpOnly-Cookie (14 Tage). Ändert man
   `ADMIN_PASSWORD`, werden alle Sitzungen ungültig. Nach 10 Fehlversuchen ist die Anmeldung 15 Minuten gesperrt.
 - Interviews lassen sich einzeln löschen, Notizen, Aufnahmen, Transkripte und KI-Bewertung inklusive. Das Audit-Log speichert nur IDs und Aktionen, keine Inhalte.
-- Hinter dem Proxy (Profil `proxy`) den App-Port nicht zusätzlich nach außen öffnen.
+- Hinter dem Proxy (Profil `proxy`) den App-Port nicht zusätzlich nach außen öffnen: `APP_PORT=127.0.0.1:8080`
+  setzen. Eine Firewall wie `ufw` genügt nicht, Docker öffnet veröffentlichte Ports an ihr vorbei.
 
 ## Entwicklung ohne Docker
 
