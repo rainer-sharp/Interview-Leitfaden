@@ -38,7 +38,7 @@ if [ "$pull" = 1 ]; then
     fail "Lokale Änderungen im Repo. Bitte committen oder mit 'git stash' beiseitelegen, dann erneut starten."
   fi
   echo "Quelle: $(git remote get-url origin 2>/dev/null || echo 'kein origin')"
-  git fetch --prune
+  git fetch --prune --tags
   upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null) \
     || fail "Branch $branch hat keinen Upstream (git branch -u origin/$branch)."
   if [ "$(git rev-parse HEAD)" = "$(git rev-parse "$upstream")" ]; then
@@ -55,8 +55,9 @@ if [ "$before" != "$after" ]; then
   echo "Neu seit $before:"
   git log --oneline "$before..$after" | sed 's/^/  /'
 fi
-version="$after"
-[ -z "$(git status --porcelain --untracked-files=no)" ] || version="$after-geaendert"
+# Version: Release-Tag (v1.0.0), nach weiteren Commits v1.0.0-3-g<commit>, ohne Tag nur der Commit.
+version=$(git describe --tags --always 2>/dev/null || echo "$after")
+[ -z "$(git status --porcelain --untracked-files=no)" ] || version="$version-geaendert"
 
 # ------------------------------------------------------------------ Sicherung
 if [ "$backup" = 1 ] && [ -n "$(docker compose ps -q --status running app 2>/dev/null)" ]; then
@@ -66,7 +67,7 @@ if [ "$backup" = 1 ] && [ -n "$(docker compose ps -q --status running app 2>/dev
 fi
 
 # ------------------------------------------------------------------ Bauen und starten
-step "Image bauen ($version)"
+step "Image bauen (Version $version)"
 export GIT_COMMIT="$version"
 docker compose build --pull $no_cache app
 

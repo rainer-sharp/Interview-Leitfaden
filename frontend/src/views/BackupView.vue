@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { api, upload } from '../api'
 import { formatSize } from '../stores/recordings'
+import { formatVersion } from '../stores/version'
 import type { RestoreResult, SafetyCopy } from '../types'
 
 const file = ref<File | null>(null)
@@ -153,6 +154,6 @@ onMounted(async () => {
       </ul>
     </section>
 
-    <p v-if="version" class="muted text-center" data-testid="app-version">Programmstand: {{ version }}</p>
+    <p v-if="version" class="muted text-center" data-testid="app-version">Version {{ formatVersion(version) }}</p>
   </main>
 </template>

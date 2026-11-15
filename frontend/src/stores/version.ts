@@ -30,6 +30,20 @@ export async function checkVersion(fetcher: Fetcher = fetchVersion): Promise<boo
   return updateAvailable.value
 }
 
+/**
+ * Lesbare Versionsangabe aus dem Stand des Servers (git describe):
+ * v1.0.0 → 1.0.0 · v1.0.0-3-gabc1234 → 1.0.0+3 (abc1234) · abc1234 → abc1234; Zusatz -geaendert → (geändert).
+ */
+export function formatVersion(raw: string): string {
+  let rest = raw.trim()
+  const changed = rest.endsWith('-geaendert')
+  if (changed) rest = rest.slice(0, -'-geaendert'.length)
+  const match = /^v?(\d+\.\d+\.\d+(?:[-.][0-9A-Za-z.]+?)?)(?:-(\d+)-g([0-9a-f]+))?$/.exec(rest)
+  let text = rest
+  if (match) text = match[2] ? `${match[1]}+${match[2]} (${match[3]})` : match[1]
+  return changed ? `${text} (geändert)` : text
+}
+
 export function reloadApp(path?: string) {
   if (path) window.location.assign(path)
   else window.location.reload()

@@ -3,9 +3,10 @@ import { watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { currentProjectId, loadProjects, projects, setCurrentProject } from './stores/project'
 import { currentUser, isAdmin, logout } from './stores/session'
-import { reloadApp, updateAvailable } from './stores/version'
+import { formatVersion, loadedVersion, reloadApp, updateAvailable } from './stores/version'
 
 const route = useRoute()
+const PROJECT_URL = 'https://github.com/rainer-sharp/Interview-Leitfaden'
 
 // Projektliste für die Auswahl oben, sobald eine angemeldete Seite offen ist.
 watch(
@@ -72,4 +73,9 @@ async function signOut() {
     </nav>
   </header>
   <RouterView />
+  <footer v-if="!route.meta.focus" class="mx-auto max-w-5xl px-4 pt-4 pb-6 text-center text-xs text-stone-500">
+    Interview-Leitfaden<span v-if="loadedVersion" data-testid="footer-version"> {{ formatVersion(loadedVersion) }}</span>
+    · Apache-2.0 ·
+    <a :href="PROJECT_URL" class="link" target="_blank" rel="noopener">Projektseite</a>
+  </footer>
 </template>

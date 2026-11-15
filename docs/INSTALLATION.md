@@ -200,8 +200,8 @@ Das Programm startet nach einem Neustart des Servers automatisch wieder.
 3. Melden Sie sich mit dem Benutzernamen **admin** und dem `ADMIN_PASSWORD` aus der `.env` an.
 4. Sie sehen die Seite **Personengruppen** mit dem Projekt **Standardprojekt** oben in der Auswahl. Die
    Installation ist damit abgeschlossen.
-5. Unten auf der Seite **Sicherung** steht der **Programmstand** (eine kurze Kennung wie `633a3fb`). Diese Angabe
-   hilft bei Rückfragen.
+5. Ganz unten auf jeder Seite steht die **Version** (z. B. `1.0.0`; nach Änderungen seit dem letzten Release
+   etwa `1.0.0+3 (75f7e44)`). Diese Angabe hilft bei Rückfragen.
 
 6. Ändern Sie oben rechts unter **Administrator** („Mein Konto“) das Passwort, falls das `ADMIN_PASSWORD` noch anderen
    bekannt ist.
@@ -373,7 +373,7 @@ docker compose logs --tail 50 app
 | `port is already allocated` (beim Starten) | Der Port wird schon benutzt. Anderen `APP_PORT` in die `.env` eintragen. |
 
 **Nach einem Update sehe ich die neuen Funktionen nicht.** Im Browser **Strg+Shift+R** drücken (Mac:
-**Cmd+Shift+R**). Unten auf der Seite **Sicherung** muss der neue Programmstand stehen.
+**Cmd+Shift+R**). Ganz unten auf der Seite muss die neue Version stehen.
 
 **„Verbindung testen“ meldet „Nicht erreichbar“.** Adresse prüfen (mit `http://` und `/v1` am Ende) und vom Server
 aus testen: `curl -s http://192.168.1.60:8000/v1/models`. Antwortet das nicht, ist der KI- bzw.

@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+- Version number from the release tag (`git describe --tags`) instead of the commit id, shown in a footer on every
+  page together with license and project link; `scripts/update.sh` builds with this version.
+
 ## [1.0.0] – 2026-11-15
 
 First public release of Interview-Leitfaden: a self-hosted web app (German UI) that guides interviewers question by

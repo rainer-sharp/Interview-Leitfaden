@@ -42,7 +42,9 @@ und `ADMIN_PASSWORD` startet sie bewusst nicht. Einen guten Schlüssel erzeugt z
 3. baut das Image neu und ersetzt den Container,
 4. wartet, bis die App antwortet, und prüft, dass sie den gerade gebauten Git-Stand meldet.
 
-Der laufende Stand steht unter `/api/health` (`version`) und unten auf der Seite „Sicherung“. Geöffnete
+Die Version ist `git describe --tags` (Release-Tag wie `v1.0.0`, danach z. B. `v1.0.0-3-g75f7e44`). Sie steht unter
+`/api/health` (`version`), in der Fußzeile jeder Seite und unten auf der Seite „Sicherung“. Ein Release entsteht mit
+einem Tag: Abschnitt in `CHANGELOG.md` ergänzen, `git tag -a v1.1.0 -m …`, `git push origin main v1.1.0`. Geöffnete
 Browser-Tabs merken ein Update selbst (Prüfung alle 5 Minuten und beim Zurückwechseln in den Tab): Sie zeigen
 oben „Neue Version … Jetzt neu laden“ und laden spätestens beim nächsten Seitenwechsel neu. Abmelden lädt die App
 ebenfalls komplett neu. Optionen:

@@ -422,7 +422,8 @@ Während eine Transkription oder KI-Auswertung läuft, ist Wiederherstellen gesp
 Vor jeder Wiederherstellung hebt das Programm den bisherigen Stand auf. Unter **Stände vor früheren
 Wiederherstellungen** (die letzten fünf) holt **Zurückholen** einen solchen Stand zurück.
 
-Ganz unten auf der Seite steht der **Programmstand** (Versionskennung).
+Ganz unten auf der Seite steht die **Version** des Programms. Sie steht außerdem in der Fußzeile jeder Seite,
+zusammen mit der Lizenz und einem Link zur Projektseite.
 
 ## 15. Datenschutz im Alltag
 
