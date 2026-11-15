@@ -225,8 +225,8 @@ Beides ist optional. Ohne diese Server funktioniert das Programm vollständig �
 
 Benötigt werden zwei Server im Netzwerk, die eine **OpenAI-kompatible Schnittstelle** anbieten (z. B. *vLLM*):
 
-- ein **Transkriptions-Server** (Sprache → Text), z. B. `http://192.168.101.95:8001/v1`,
-- ein **KI-Server** (Sprachmodell für Bewertung und Analyse), z. B. `http://192.168.101.94:8000/v1`.
+- ein **Transkriptions-Server** (Sprache → Text), z. B. `http://192.168.1.60:8001/v1`,
+- ein **KI-Server** (Sprachmodell für Bewertung und Analyse), z. B. `http://192.168.1.60:8000/v1`.
 
 Einrichtung in der App:
 
@@ -366,7 +366,7 @@ docker compose logs --tail 50 app
 **Cmd+Shift+R**). Unten auf der Seite **Sicherung** muss der neue Programmstand stehen.
 
 **„Verbindung testen“ meldet „Nicht erreichbar“.** Adresse prüfen (mit `http://` und `/v1` am Ende) und vom Server
-aus testen: `curl -s http://192.168.101.94:8000/v1/models`. Antwortet das nicht, ist der KI- bzw.
+aus testen: `curl -s http://192.168.1.60:8000/v1/models`. Antwortet das nicht, ist der KI- bzw.
 Transkriptions-Server aus oder eine Firewall dazwischen.
 
 **Der Speicher läuft voll.** Meist sind es Audiodateien (`du -sh data/audio`). Löschen Sie nicht mehr benötigte

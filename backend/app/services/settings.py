@@ -1,5 +1,5 @@
-"""In der App änderbare Einstellungen. Vorgaben kommen aus der Umgebung, sonst aus transcribe_interview.py
-(Transkription) bzw. aus den Konstanten hier (KI-Bewertung)."""
+"""In der App änderbare Einstellungen. Vorgaben kommen aus der Umgebung, sonst aus den Konstanten hier bzw. für das
+Transkriptionsmodell aus transcribe_interview.py."""
 from dataclasses import asdict, dataclass
 
 from sqlalchemy.orm import Session
@@ -10,7 +10,8 @@ from app.services import transcribe_interview as script
 
 MODES = ("mix", "tracks")
 
-LLM_URL = "http://192.168.101.94:8000/v1"
+TRANSCRIBE_URL = "http://localhost:8001/v1"
+LLM_URL = "http://localhost:8000/v1"
 # Leer = das erste Modell, das der Server unter /models anbietet (dort läuft genau eines).
 LLM_MODEL = ""
 LLM_INSTRUCTIONS = """Du bist ein erfahrener Analyst und wertest Interviews aus. Du erhältst den Fragenkatalog mit den \
@@ -59,7 +60,7 @@ class TranscriptionSettings:
 def _defaults() -> dict[str, str]:
     env = get_settings()
     return {
-        "url": env.transcribe_url or script.SERVER_URL,
+        "url": env.transcribe_url or TRANSCRIBE_URL,
         "model": env.transcribe_model or script.MODEL_NAME,
         "api_key": env.transcribe_api_key or script.API_KEY,
         "modus": "mix",

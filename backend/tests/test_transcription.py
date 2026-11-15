@@ -133,7 +133,7 @@ def test_transcription_job_fills_interview(client, recording):
     assert transcription.process_next(fake) is False
     src, name, server, options = calls[0]
     assert src.is_file() and name == "gespraech.mkv"
-    assert server.url == script.SERVER_URL and options.name_partner == "A. B."
+    assert server.url == settings_service.TRANSCRIBE_URL and options.name_partner == "A. B."
 
     done = client.get(rec_url(recording)).json()
     assert done["transkript_status"] == "fertig" and done["transkript"] == TRANSCRIPT
@@ -209,9 +209,9 @@ def test_closed_interview_still_accepts_recordings(client, interview):
 
 
 # ------------------------------------------------------------------ Einstellungen
-def test_settings_defaults_come_from_script(client):
+def test_settings_defaults(client):
     body = client.get("/api/einstellungen/transkription").json()
-    assert body["url"] == script.SERVER_URL and body["model"] == script.MODEL_NAME
+    assert body["url"] == settings_service.TRANSCRIBE_URL and body["model"] == script.MODEL_NAME
     assert body["modus"] == "mix" and body["name_ich"] == "Ich" and body["api_key_gesetzt"] is False
     assert "api_key" not in body
 
@@ -226,7 +226,7 @@ def test_settings_update_and_reset(client):
     assert body["url"] == "http://gpu:8001/v1" and body["model"] == "anderes"  # nicht übergebene Felder bleiben
 
     body = client.put(url, json={"url": "", "api_key": ""}).json()
-    assert body["url"] == script.SERVER_URL and body["api_key_gesetzt"] is False
+    assert body["url"] == settings_service.TRANSCRIBE_URL and body["api_key_gesetzt"] is False
 
     assert client.put(url, json={"url": "ftp://x"}).status_code == 422
     assert client.put(url, json={"modus": "egal"}).status_code == 422
@@ -323,6 +323,7 @@ def test_adapter_turns_sys_exit_into_error(tmp_path, monkeypatch):
     src.write_bytes(b"x")
     monkeypatch.setattr(transcription, "ffmpeg_available", lambda: True)
     monkeypatch.setattr(script, "audio_track_count", lambda _src: 1)
+    saved_url = script.SERVER_URL
 
     with pytest.raises(transcription.TranscriptionError, match="braucht 3 Audiospuren"):
         transcription.transcribe_file(src, "a.mp3", SERVER, transcription.Options(modus="tracks"))
@@ -333,7 +334,7 @@ def test_adapter_turns_sys_exit_into_error(tmp_path, monkeypatch):
     monkeypatch.setattr(script, "mode_mix", server_error)
     with pytest.raises(transcription.TranscriptionError, match="Server-Fehler 503"):
         transcription.transcribe_file(src, "a.mp3", SERVER, transcription.Options())
-    assert script.SERVER_URL == "http://192.168.101.95:8001/v1" and "print" not in vars(script)
+    assert script.SERVER_URL == saved_url and "print" not in vars(script)
 
 
 def test_adapter_without_ffmpeg(tmp_path, monkeypatch):

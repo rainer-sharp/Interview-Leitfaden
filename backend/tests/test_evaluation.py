@@ -294,7 +294,7 @@ def test_job_against_server(client, interview, fake_llm):
 def test_llm_settings(client, fake_llm):
     base, _seen = fake_llm
     defaults = client.get("/api/einstellungen/llm").json()
-    assert defaults["url"] == "http://192.168.101.94:8000/v1" and defaults["model"] == ""
+    assert defaults["url"] == "http://localhost:8000/v1" and defaults["model"] == ""
     assert defaults["anweisung_angepasst"] is False and "## Gesamtbewertung" in defaults["anweisung"]
 
     changed = client.put("/api/einstellungen/llm", json={"url": base, "model": "llm-2", "anweisung": "Kurz."}).json()

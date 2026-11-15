@@ -139,7 +139,7 @@ onMounted(async () => {
       </p>
       <div>
         <label class="label" for="url">Server-URL</label>
-        <input id="url" v-model="form.url" class="input" placeholder="http://192.168.101.95:8001/v1" />
+        <input id="url" v-model="form.url" class="input" placeholder="http://localhost:8001/v1" />
       </div>
       <div>
         <label class="label" for="model">Modell</label>
@@ -220,7 +220,7 @@ onMounted(async () => {
       </div>
       <div>
         <label class="label" for="llm-url">Server-URL</label>
-        <input id="llm-url" v-model="llmForm.url" class="input" placeholder="http://192.168.101.94:8000/v1" />
+        <input id="llm-url" v-model="llmForm.url" class="input" placeholder="http://localhost:8000/v1" />
       </div>
       <div>
         <label class="label" for="llm-model">Modell</label>

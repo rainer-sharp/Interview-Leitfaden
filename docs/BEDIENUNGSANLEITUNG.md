@@ -439,41 +439,52 @@ Ganz unten auf der Seite steht der **Programmstand** (Versionskennung).
 ## 16. Häufige Fragen
 
 **Ich kann ein Interview nicht ändern, oben steht „Dieses Interview führt …“.**
+
 Es gehört einer anderen Person. Lesen und exportieren dürfen Sie es; ändern dürfen nur diese Person und Admins.
 
 **Ich sehe ein Projekt nicht.**
+
 Sie sind ihm nicht zugeordnet. Ein Admin ordnet Sie unter **Benutzer** oder auf der Projektseite zu.
 
 **Ich sehe meine Gruppen oder Interviews nicht mehr.**
+
 Prüfen Sie oben die **Projektauswahl** – angezeigt wird immer nur das aktuelle Projekt. Unter **Interviews** zeigt
 das Häkchen **Interviews aller Projekte zeigen** alles.
 
 **Bei „Neues Interview“ fehlt meine Gruppe.**
+
 Die Gruppe gehört zu einem anderen Projekt, oder ihr Katalog hat noch keine Fragen.
 
 **Ich kann eine Notiz nicht ändern.**
+
 Das Interview ist abgeschlossen. Auf der Abschluss-Seite **Wieder öffnen und bearbeiten** klicken.
 
 **Oben steht „offline – wird lokal gehalten …“.**
+
 Die Verbindung zum Server ist unterbrochen. Weiterschreiben ist möglich; das Fenster nicht schließen, bis wieder
 **gespeichert** erscheint.
 
 **Die Transkription meldet einen Fehler.**
+
 Die Fehlermeldung steht rot unter der Aufnahme, das **Protokoll** lässt sich aufklappen. Häufige Ursachen: der
 Transkriptions-Server ist nicht erreichbar (Einstellungen → Verbindung testen), die Datei enthält keine Tonspur oder
 der Modus *Spuren getrennt* wurde bei einer Datei ohne drei Spuren gewählt.
 
 **Die KI-Bewertung meldet „LLM-Server nicht erreichbar“.**
+
 Einstellungen → LLM-Server → **Verbindung testen**. Bleibt es dabei, die Administration informieren.
 
 **Die KI-Bewertung enthält einen Fehler.**
+
 Im Textfeld korrigieren und **Korrekturen speichern** – die korrigierte Fassung gilt dann auch für PDF und Exporte
 und wird als „von Hand überarbeitet“ vermerkt. Oder die Anweisung des Projekts schärfen und **Neu bewerten**.
 
 **Nach einem Update fehlen neue Funktionen.**
+
 Auf den gelben Balken **Jetzt neu laden** klicken oder **Strg+Shift+R** drücken.
 
 **Wie bekomme ich alle Interviews für eine Auswertung in Excel?**
+
 Jedes Interview hat den Export **CSV (Excel)**. Für alle Interviews auf einmal: **Sicherung → Backup herunterladen**;
 im ZIP liegt `alle-interviews.csv`.
 

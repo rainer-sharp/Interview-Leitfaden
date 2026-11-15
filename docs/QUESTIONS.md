@@ -59,7 +59,7 @@ Gesammelt bei der Umsetzung der Pakete 1–10. Die Punkte unter „Annahmen“ s
     weil der Zweck der Interviews je Gruppe verschieden ist; der Maßstab lässt sich über die Anweisung (System-Prompt)
     in den Einstellungen anpassen.
 19. **Modell automatisch:** Ohne eingestelltes Modell nimmt die App das erste unter `/models` (der Server bietet genau
-    eines an). Vorgabe-URL `http://192.168.101.94:8000/v1` steht im Code, damit es ohne `.env`-Eintrag läuft.
+    eines an). Vorgabe-URL `http://localhost:8000/v1` steht im Code, damit es ohne `.env`-Eintrag läuft.
 20. **Transkript wird bei Start gelesen**, nicht beim Einreihen. Läuft noch eine Transkription, weist die Oberfläche
     darauf hin, wartet aber nicht automatisch.
 21. **Download** als PDF und Markdown; zusätzlich steht die Bewertung in den Interview-Exporten (MD/PDF/CSV) und damit

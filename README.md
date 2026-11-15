@@ -4,7 +4,10 @@ Selbst gehostete Web-App, die Interviewer Frage für Frage durch ein Gespräch f
 importierte Fragenkataloge, je Frage eine Notiz mit Autosave und am Ende einen Export als PDF, Markdown oder CSV.
 
 **Anleitungen:** [Installation](docs/INSTALLATION.md) (Schritt für Schritt, auch für Nicht-Entwickler) ·
-[Bedienungsanleitung](docs/BEDIENUNGSANLEITUNG.md)
+[Bedienungsanleitung](docs/BEDIENUNGSANLEITUNG.md) ([PDF](docs/Bedienungsanleitung.pdf))
+
+> **Nur für den Betrieb im eigenen Rechner oder im Intranet gedacht.** Die App ist nicht für den direkten Betrieb im
+> Internet gehärtet. Interviews, Aufnahmen und Transkripte sind vertrauliche Daten.
 
 Die Spezifikation steht in [docs/SPEC.md](docs/SPEC.md), der Umsetzungsstand in [docs/TASKS.md](docs/TASKS.md).
 
@@ -117,7 +120,7 @@ hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn 
 
 ### LLM-Server (KI-Bewertung)
 
-- Vorgabe: `http://192.168.101.94:8000/v1` (vLLM). Ohne eingestelltes Modell nimmt die App das erste Modell, das der
+- Vorgabe: `http://localhost:8000/v1` (vLLM). Ohne eingestelltes Modell nimmt die App das erste Modell, das der
   Server unter `/models` anbietet (derzeit `nvidia/Qwen3.8-Flash-Next-FP4-Local`), ein Modellwechsel auf dem Server
   braucht also keine Änderung in der App.
 - **Einstellungen** → „LLM-Server für die KI-Bewertung“: URL, Modell, API-Schlüssel, „Verbindung testen“ und die
@@ -175,3 +178,9 @@ make test      # pytest, Vitest, Playwright-E2E (baut das Frontend und startet e
 Struktur: `backend/app/{api,models,services,importers}`, `frontend/src/{views,components,stores}`, Testdateien in
 `testdata/`, Export-Referenzdateien in `testdata/referenz/` (neu erzeugen mit `REGENERATE=1 pytest tests/test_export.py`).
 Schemaänderungen immer als neue Alembic-Migration in `backend/alembic/versions/`.
+
+## Lizenz
+
+Copyright 2026 Rainer Sestig. Lizenziert unter der [Apache License 2.0](LICENSE): Nutzung, Änderung und Weitergabe,
+auch kommerziell, sind erlaubt. Bei jeder Weitergabe müssen der Copyright-Vermerk, die Lizenz und die Datei
+[NOTICE](NOTICE) mitgeliefert und geänderte Dateien als geändert gekennzeichnet werden.

@@ -30,7 +30,7 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“). Abw
   Bitte im Container eine kurze OBS-Aufnahme transkribieren.
 - Paket 11: Audiodateien sind nicht im Backup-ZIP (Größe). Kein Abbrechen laufender Transkriptionen (die Anfrage an
   den Server lässt sich nicht unterbrechen); Löschen der Aufnahme verwirft das Ergebnis.
-- Paket 12: Live gegen 192.168.101.94:8000 geprüft (Modell automatisch erkannt, ~1 min, PDF/MD-Download). E2E
+- Paket 12: Live gegen einen vLLM-Server im LAN geprüft (Modell automatisch erkannt, ~1 min, PDF/MD-Download). E2E
   (`e2e/evaluation.spec.ts`) lief hier aus demselben Grund wie in Paket 11 nicht (libatk fehlt). Kein Abbrechen der
   laufenden LLM-Anfrage; „Abbrechen“ verwirft nur das Ergebnis.
 - Paket 13: `scripts/restore.sh` nur ohne Docker geprüft (Python-Pfad `-` über stdin ist derselbe Code wie die CLI,
