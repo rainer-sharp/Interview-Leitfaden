@@ -2,6 +2,7 @@
 außerdem der LLM-Server für die KI-Bewertung."""
 from fastapi import APIRouter
 
+from app.api.access import Admin
 from app.api.deps import Db
 from app.api.schemas import (
     LlmCheckOut,
@@ -30,7 +31,7 @@ def get_settings(db: Db):
 
 
 @router.put("", response_model=TranscriptionSettingsOut)
-def update_settings(body: TranscriptionSettingsIn, db: Db):
+def update_settings(body: TranscriptionSettingsIn, db: Db, me: Admin):
     values = service.update_transcription(db, body.model_dump(exclude_none=True))
     audit.log(db, "einstellungen", 0, "transkription-geaendert")
     db.commit()
@@ -38,7 +39,7 @@ def update_settings(body: TranscriptionSettingsIn, db: Db):
 
 
 @router.post("/test", response_model=ServerCheckOut)
-def test_server(body: TranscriptionSettingsIn, db: Db):
+def test_server(body: TranscriptionSettingsIn, db: Db, me: Admin):
     """Prüft die übergebenen (noch nicht gespeicherten) Werte, fehlende Felder kommen aus den Einstellungen."""
     saved = service.transcription(db)
     server = service.TranscriptionSettings(
@@ -58,7 +59,7 @@ def get_llm(db: Db):
 
 
 @llm_router.put("", response_model=LlmSettingsOut)
-def update_llm(body: LlmSettingsIn, db: Db):
+def update_llm(body: LlmSettingsIn, db: Db, me: Admin):
     values = service.update_llm(db, body.model_dump(exclude_none=True))
     audit.log(db, "einstellungen", 0, "llm-geaendert")
     db.commit()
@@ -66,7 +67,7 @@ def update_llm(body: LlmSettingsIn, db: Db):
 
 
 @llm_router.post("/test", response_model=LlmCheckOut)
-def test_llm(body: LlmSettingsIn, db: Db):
+def test_llm(body: LlmSettingsIn, db: Db, me: Admin):
     """Prüft die Werte aus dem Formular. Leeres Modell = Vorgabe (ohne LLM_MODEL: automatisch)."""
     saved = service.llm(db)
     server = service.LlmSettings(

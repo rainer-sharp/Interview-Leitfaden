@@ -7,6 +7,7 @@
 - **Gruppe:** Kunden Einkauf
 - **Fragenkatalog:** Leitfaden (Version 1)
 - **Status:** abgeschlossen
+- **Interviewer:** Administrator
 
 ## Einstieg
 

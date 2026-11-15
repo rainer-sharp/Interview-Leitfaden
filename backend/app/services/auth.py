@@ -1,4 +1,5 @@
-"""Ein Admin-Passwort, eine signierte Sitzung im Cookie. Ändert sich das Passwort, verfallen alle Sitzungen."""
+"""Sitzung im signierten Cookie: Benutzer, Sitzungsversion und Ablauf. Eine Passwortänderung oder Sperre erhöht die
+Sitzungsversion des Kontos; damit verfallen alle bestehenden Sitzungen dieses Kontos."""
 import hashlib
 import hmac
 import secrets
@@ -11,28 +12,27 @@ MAX_FAILURES = 10
 FAILURE_WINDOW = 15 * 60
 
 
-def _signature(secret_key: str, admin_password: str, expires: int) -> str:
-    password_hash = hashlib.sha256(admin_password.encode()).hexdigest()
-    message = f"admin|{expires}|{password_hash}".encode()
+def _signature(secret_key: str, user_id: int, version: int, expires: int) -> str:
+    message = f"benutzer|{user_id}|{version}|{expires}".encode()
     return hmac.new(secret_key.encode(), message, hashlib.sha256).hexdigest()
 
 
-def password_matches(given: str, admin_password: str) -> bool:
-    return secrets.compare_digest(given.encode(), admin_password.encode())
-
-
-def create_token(secret_key: str, admin_password: str, now: float | None = None) -> str:
+def create_token(secret_key: str, user_id: int, version: int, now: float | None = None) -> str:
     expires = int(time.time() if now is None else now) + SESSION_SECONDS
-    return f"{expires}.{_signature(secret_key, admin_password, expires)}"
+    return f"{user_id}.{version}.{expires}.{_signature(secret_key, user_id, version, expires)}"
 
 
-def token_valid(token: str | None, secret_key: str, admin_password: str, now: float | None = None) -> bool:
-    if not token or "." not in token:
-        return False
-    expires_raw, signature = token.split(".", 1)
-    if not expires_raw.isdigit() or int(expires_raw) < (time.time() if now is None else now):
-        return False
-    return secrets.compare_digest(signature, _signature(secret_key, admin_password, int(expires_raw)))
+def read_token(token: str | None, secret_key: str, now: float | None = None) -> tuple[int, int] | None:
+    """(Benutzer-ID, Sitzungsversion) aus einem gültigen, nicht abgelaufenen Token, sonst None."""
+    parts = (token or "").split(".")
+    if len(parts) != 4 or not all(p.isdigit() for p in parts[:3]):
+        return None
+    user_id, version, expires = (int(p) for p in parts[:3])
+    if expires < (time.time() if now is None else now):
+        return None
+    if not secrets.compare_digest(parts[3], _signature(secret_key, user_id, version, expires)):
+        return None
+    return user_id, version
 
 
 class LoginLimiter:

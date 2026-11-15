@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.db import get_engine
 from app.models import Evaluation, ProjectAnalysis, Recording
-from app.services import audit
+from app.services import audit, users
 
 BACKEND = Path(__file__).resolve().parents[2]
 SQLITE_MAGIC = b"SQLite format 3\x00"
@@ -214,6 +214,7 @@ def restore_database(backup_db: Path) -> RestoreResult:
     evaluation.worker.notify()
 
     with Session(get_engine()) as db:
+        users.ensure_admin(db)  # Backup aus der Zeit vor den Benutzerkonten: sonst könnte sich niemand anmelden
         missing_audio = sum(not transcription.file_path(r).is_file() for r in db.query(Recording))
         audit.log(db, "backup", 0, "wiederhergestellt")
         db.commit()

@@ -5,7 +5,9 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from app.api.catalogs import catalog_out
-from app.api.deps import Db, get_or_404
+from app.api import access
+from app.api.access import Me
+from app.api.deps import Db
 from app.api.schemas import QuestionnaireOut
 from app.importers.parser import ParseResult, parse_file
 from app.models import Group, Question, Questionnaire
@@ -37,6 +39,7 @@ async def preview(file: Annotated[UploadFile, File()]) -> dict:
 @router.post("", response_model=QuestionnaireOut, status_code=201)
 async def save(
     db: Db,
+    me: Me,
     file: Annotated[UploadFile, File()],
     modus: Annotated[Literal["neu", "version", "anhaengen"], Form()],
     group_id: Annotated[int | None, Form()] = None,
@@ -51,7 +54,7 @@ async def save(
         name = name.strip()
         if group_id is None or not name:
             raise HTTPException(status_code=422, detail="Für einen neuen Katalog fehlen Gruppe oder Name.")
-        group = get_or_404(db, Group, group_id)
+        group = access.group(db, me, group_id)
         if db.query(Questionnaire).filter_by(group_id=group.id, name=name).first():
             raise HTTPException(
                 status_code=409, detail=f"Den Katalog „{name}“ gibt es schon. Bitte als neue Version speichern."
@@ -61,7 +64,7 @@ async def save(
     else:
         if questionnaire_id is None:
             raise HTTPException(status_code=422, detail="Bitte einen bestehenden Katalog wählen.")
-        existing = get_or_404(db, Questionnaire, questionnaire_id)
+        existing = access.catalog(db, me, questionnaire_id)
         if modus == "anhaengen":
             catalog = existing
         else:

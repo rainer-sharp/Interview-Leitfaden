@@ -75,6 +75,7 @@ def interview_data(interview: Interview, nur_transkripte: bool = False) -> dict:
         "organisation": interview.organisation,
         "datum": interview.datum.isoformat(),
         "status": interview.status,
+        "interviewer": interview.interviewer.name if interview.interviewer else None,
         "gruppe": catalog.group.name,
         "katalog": catalog.name,
         "katalog_version": catalog.version,

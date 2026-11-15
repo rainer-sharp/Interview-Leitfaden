@@ -114,3 +114,24 @@ Gesammelt bei der Umsetzung der Pakete 1–10. Die Punkte unter „Annahmen“ s
 41. **Eigene Analyse-Anweisung** je Projekt und eine allgemeine in den Einstellungen, wie bei der Interview-Bewertung.
     Die Anweisung für die Kurzzusammenfassung ist fest.
 42. **Ein Hintergrund-Thread** für alle LLM-Aufträge; Interview-Bewertungen haben Vorrang vor Projekt-Analysen.
+
+## Paket 16: Mehrbenutzer für das Intranet (Auftrag aus dem Chat, SPEC Version 2 „Mehrbenutzer, Rollen“)
+
+Entscheidungen des Auftraggebers: eigene Konten (kein AD/LDAP), Interviewer sehen zugeordnete Projekte und ändern
+nur eigene Interviews, dürfen Projekte anlegen, Kataloge pflegen und KI-Funktionen nutzen. Kein Internet-Betrieb.
+Damit ist auch die offene Frage der SPEC „Einzelnutzer oder mehrere Interviewer“ beantwortet.
+
+43. **Übergang:** Das erste Konto `admin` entsteht beim Start aus `ADMIN_PASSWORD`, nicht in der Migration (kein
+    Passwort im Migrationsverlauf). Vorhandene Interviews gehören diesem Konto. Ein Login nur mit Passwort (ohne
+    Benutzername) gilt als `admin`, damit alte Skripte weiterlaufen. Danach ist `ADMIN_PASSWORD` ohne Wirkung.
+44. **Projekt anlegen** macht die anlegende Person zum Mitglied, auch beim Kopieren. Projekte löschen und Mitglieder
+    festlegen nur Admins. Interviewer dürfen Projekte, in denen sie Mitglied sind, umbenennen und deren
+    KI-Anweisungen ändern.
+45. **Nicht sichtbar = 404**, keine Berechtigung = 403. So lässt sich nicht erraten, welche Projekt-IDs es gibt.
+46. **Konten löschen** nur ohne Interviews; sonst sperren. Gelöschte Konten (falls doch per DB) lassen das Interview
+    stehen („Konto gelöscht“), dann darf nur noch ein Admin es ändern.
+47. **Lesen der Einstellungen** (Vorgaben für Transkription, allgemeine Anweisungen) bleibt für alle erlaubt, weil
+    Formulare sie als Vorgabe brauchen; API-Schlüssel werden nie ausgeliefert.
+48. **Audit-Log** speichert jetzt die Benutzer-ID (ohne Fremdschlüssel, damit Löschen das Log nicht ändert).
+49. **Bewusst nicht enthalten** (für Internet-Betrieb nötig): Zwei-Faktor-Anmeldung, Passwort-Vergessen per E-Mail,
+    Sperre je Konto statt je IP, Passwortrichtlinien über die Mindestlänge hinaus.

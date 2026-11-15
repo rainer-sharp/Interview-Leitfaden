@@ -5,6 +5,7 @@ import { login } from '../stores/session'
 
 const route = useRoute()
 const router = useRouter()
+const benutzername = ref('')
 const passwort = ref('')
 const error = ref('')
 const busy = ref(false)
@@ -13,7 +14,7 @@ async function submit() {
   busy.value = true
   error.value = ''
   try {
-    await login(passwort.value)
+    await login(benutzername.value, passwort.value)
     const target = typeof route.query.weiter === 'string' && route.query.weiter.startsWith('/') ? route.query.weiter : '/'
     router.replace(target)
   } catch (e) {
@@ -31,16 +32,21 @@ async function submit() {
       <h1 class="text-xl font-semibold">Interview-Leitfaden</h1>
       <p v-if="error" class="error-box" role="alert">{{ error }}</p>
       <div>
-        <label class="label" for="password">Passwort</label>
+        <label class="label" for="username">Benutzername</label>
         <input
-          id="password"
-          v-model="passwort"
-          type="password"
+          id="username"
+          v-model="benutzername"
           class="input"
-          autocomplete="current-password"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
           required
           autofocus
         />
+      </div>
+      <div>
+        <label class="label" for="password">Passwort</label>
+        <input id="password" v-model="passwort" type="password" class="input" autocomplete="current-password" required />
       </div>
       <button class="btn btn-primary w-full" :disabled="busy">Anmelden</button>
     </form>

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { api } from '../api'
 import { currentProjectId, loadProjects, projects, setCurrentProject } from '../stores/project'
+import { isAdmin } from '../stores/session'
 import type { Project } from '../types'
 
 const router = useRouter()
@@ -73,6 +74,7 @@ onMounted(load)
       werden Gruppen und Kataloge übernommen, Interviews nicht. Unter „Details“: alle Interviews als eine Datei, KI-Analyse
       des Projekts und eigene KI-Anweisungen.
     </p>
+    <p v-if="!isAdmin" class="muted">Sie sehen die Projekte, denen Sie zugeordnet sind, und die, die Sie selbst angelegt haben.</p>
     <p v-if="error" class="error-box" role="alert">{{ error }}</p>
 
     <ul v-if="projects.length" class="space-y-3">
@@ -102,7 +104,7 @@ onMounted(load)
             <RouterLink :to="`/projekte/${project.id}`" class="btn">Details</RouterLink>
             <button class="btn" @click="startCopy(project)">Kopieren</button>
             <button
-              v-if="projects.length > 1 && !project.interviews"
+              v-if="isAdmin && projects.length > 1 && !project.interviews"
               class="btn btn-danger"
               @click="(confirmDelete = project.id), (copyFor = null)"
             >

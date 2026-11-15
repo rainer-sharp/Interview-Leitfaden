@@ -150,8 +150,15 @@ hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn 
   wählt.
 - Das Backup-ZIP und die tägliche DB-Sicherung enthalten die Transkripte, **nicht** die Audiodateien. Wer diese
   sichern will, muss `data/audio/` zusätzlich sichern.
-- Zugang mit einem Admin-Passwort, die Sitzung liegt in einem signierten HttpOnly-Cookie (14 Tage). Ändert man
-  `ADMIN_PASSWORD`, werden alle Sitzungen ungültig. Nach 10 Fehlversuchen ist die Anmeldung 15 Minuten gesperrt.
+- **Benutzerkonten mit Rollen** (für das Intranet, nicht für den Internet-Betrieb gedacht): *Admin* darf alles;
+  *Interviewer* sieht die ihm zugeordneten Projekte mit allen Interviews, ändert nur eigene, darf Projekte anlegen,
+  Kataloge pflegen und KI-Funktionen nutzen. Benutzer, Einstellungen, Sicherung und Projektlöschung nur für Admins.
+  Rechteprüfung zentral in `backend/app/api/access.py`; nicht sichtbare Objekte antworten mit 404.
+- Passwörter als scrypt-Hash (Standardbibliothek). Sitzung im signierten HttpOnly-Cookie (14 Tage) mit
+  Sitzungsversion je Konto: Passwortwechsel oder Sperre beendet alle Sitzungen des Kontos. Nach 10 Fehlversuchen
+  je Client-IP 15 Minuten Sperre.
+- Erstes Konto **admin** mit `ADMIN_PASSWORD` legt die App beim Start an, solange es kein Konto gibt (auch nach dem
+  Einspielen eines alten Backups). Notfall: `docker compose exec -it app python -m app.services.users passwort admin`.
 - Interviews lassen sich einzeln löschen, Notizen, Aufnahmen, Transkripte und KI-Bewertung inklusive. Das Audit-Log speichert nur IDs und Aktionen, keine Inhalte.
 - Hinter dem Proxy (Profil `proxy`) den App-Port nicht zusätzlich nach außen öffnen: `APP_PORT=127.0.0.1:8080`
   setzen. Eine Firewall wie `ufw` genügt nicht, Docker öffnet veröffentlichte Ports an ihr vorbei.

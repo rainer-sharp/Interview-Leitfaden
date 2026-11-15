@@ -43,6 +43,7 @@ class ProjectOut(BaseModel):
     gruppen: int
     kataloge: int
     interviews: int
+    mitglieder: list[dict]
 
 
 class QuestionnaireSummary(Orm):
@@ -139,6 +140,9 @@ class InterviewSummary(Orm):
     version: int
     fragen: int
     bearbeitet: int
+    interviewer_id: int | None
+    interviewer_name: str
+    darf_bearbeiten: bool
 
 
 class InterviewOut(InterviewSummary):

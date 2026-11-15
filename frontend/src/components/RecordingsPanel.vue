@@ -5,7 +5,10 @@ import { api, upload } from '../api'
 import { ACCEPTED_AUDIO, elapsed, formatSize, isBusy, TRANSCRIPT_STATUS_LABEL } from '../stores/recordings'
 import type { Recording, TranscriptionMode, TranscriptionSettings } from '../types'
 
-const props = defineProps<{ interviewId: number; person: string; recordings: Recording[] }>()
+const props = withDefaults(
+  defineProps<{ interviewId: number; person: string; recordings: Recording[]; canEdit?: boolean }>(),
+  { canEdit: true },
+)
 const emit = defineEmits<{ changed: [recordings: Recording[]] }>()
 
 const items = ref<Recording[]>([...props.recordings])
@@ -127,7 +130,7 @@ watch(
 onMounted(async () => {
   items.value.forEach((r) => r.transkript_status === 'fertig' && (drafts[r.id] = r.transkript))
   try {
-    settings.value = await api.get<TranscriptionSettings>('/einstellungen/transkription')
+    if (props.canEdit) settings.value = await api.get<TranscriptionSettings>('/einstellungen/transkription')
   } catch {
     // Ohne Einstellungen gelten die Vorgaben im Formular.
   }
@@ -171,7 +174,7 @@ onBeforeUnmount(() => clearInterval(timer))
           </div>
           <div class="flex flex-wrap gap-2">
             <button
-              v-if="!isBusy(recording) && optionsFor !== recording.id"
+              v-if="canEdit && !isBusy(recording) && optionsFor !== recording.id"
               class="btn"
               :class="{ 'btn-primary': recording.transkript_status === 'keine' }"
               @click="openOptions(recording)"
@@ -179,7 +182,11 @@ onBeforeUnmount(() => clearInterval(timer))
               {{ recording.transkript_status === 'keine' ? 'Transkribieren' : 'Neu transkribieren' }}
             </button>
             <a :href="`/api${base}/${recording.id}/datei`" class="btn" download>Audio</a>
-            <button v-if="confirmDelete !== recording.id" class="btn btn-danger" @click="confirmDelete = recording.id">
+            <button
+              v-if="canEdit && confirmDelete !== recording.id"
+              class="btn btn-danger"
+              @click="confirmDelete = recording.id"
+            >
               Löschen
             </button>
           </div>
@@ -253,11 +260,12 @@ onBeforeUnmount(() => clearInterval(timer))
             :id="`transkript-${recording.id}`"
             v-model="drafts[recording.id]"
             class="input min-h-80 font-mono text-sm leading-relaxed"
-            :readonly="isBusy(recording)"
+            :readonly="isBusy(recording) || !canEdit"
             data-testid="transcript"
           ></textarea>
           <div class="flex flex-wrap gap-2">
             <button
+              v-if="canEdit"
               class="btn"
               :disabled="drafts[recording.id] === recording.transkript || isBusy(recording)"
               @click="saveTranscript(recording)"
@@ -270,7 +278,7 @@ onBeforeUnmount(() => clearInterval(timer))
       </li>
     </ul>
 
-    <div>
+    <div v-if="canEdit">
       <label class="label" for="aufnahme-datei">Aufnahme hochladen</label>
       <input
         id="aufnahme-datei"

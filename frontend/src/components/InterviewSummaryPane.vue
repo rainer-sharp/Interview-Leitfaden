@@ -4,7 +4,9 @@ import { countByStatus, STATUS_LABEL } from '../stores/interviewState'
 import type { Interview } from '../types'
 import StatusDot from './StatusDot.vue'
 
-const props = defineProps<{ interview: Interview; readonly: boolean }>()
+const props = withDefaults(defineProps<{ interview: Interview; readonly: boolean; canEdit?: boolean }>(), {
+  canEdit: true,
+})
 const emit = defineEmits<{ jump: [index: number]; gesamtnotiz: [text: string]; finish: []; reopen: [] }>()
 
 const counts = computed(() => countByStatus(props.interview.answers))
@@ -17,7 +19,7 @@ const missingRequired = computed(() => unfinished.value.filter(({ answer }) => a
 <template>
   <section class="mx-auto max-w-3xl space-y-6" data-testid="summary">
     <div>
-      <h1 class="text-2xl font-semibold">{{ readonly ? 'Interview abgeschlossen' : 'Abschluss' }}</h1>
+      <h1 class="text-2xl font-semibold">{{ interview.status === 'abgeschlossen' ? 'Interview abgeschlossen' : 'Abschluss' }}</h1>
       <p class="muted mt-1">
         {{ counts.beantwortet }} beantwortet · {{ counts.spaeter }} später · {{ counts.uebersprungen }} übersprungen ·
         {{ counts.offen }} offen
@@ -62,8 +64,10 @@ const missingRequired = computed(() => unfinished.value.filter(({ answer }) => a
     <slot />
 
     <div class="flex flex-wrap gap-2">
-      <button v-if="!readonly" class="btn btn-primary" @click="emit('finish')">Interview abschließen</button>
-      <button v-else class="btn" @click="emit('reopen')">Wieder öffnen und bearbeiten</button>
+      <template v-if="canEdit">
+        <button v-if="!readonly" class="btn btn-primary" @click="emit('finish')">Interview abschließen</button>
+        <button v-else class="btn" @click="emit('reopen')">Wieder öffnen und bearbeiten</button>
+      </template>
     </div>
   </section>
 </template>

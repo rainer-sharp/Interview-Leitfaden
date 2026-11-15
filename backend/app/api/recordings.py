@@ -8,6 +8,8 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Response, UploadFile
 from fastapi.responses import FileResponse
 
+from app.api import access
+from app.api.access import Me
 from app.api.deps import Db, attachment, get_or_404
 from app.api.schemas import RecordingOut, TranscriptionStart, TranscriptUpdate
 from app.config import get_settings
@@ -33,13 +35,15 @@ def _require_idle(recording: Recording) -> None:
 
 
 @router.get("", response_model=list[RecordingOut])
-def list_recordings(interview_id: int, db: Db):
-    return get_or_404(db, Interview, interview_id).recordings
+def list_recordings(interview_id: int, db: Db, me: Me):
+    access.interview(db, me, interview_id)
+    return db.get(Interview, interview_id).recordings
 
 
 @router.post("", response_model=RecordingOut, status_code=201)
-def upload(interview_id: int, datei: UploadFile, db: Db):
-    interview = get_or_404(db, Interview, interview_id)
+def upload(interview_id: int, datei: UploadFile, db: Db, me: Me):
+    access.editable_interview(db, me, interview_id)
+    interview = db.get(Interview, interview_id)
     name = Path(datei.filename or "").name.strip() or "aufnahme"
     if Path(name).suffix.lower() not in transcription.AUDIO_EXTENSIONS:
         allowed = ", ".join(sorted(transcription.AUDIO_EXTENSIONS))
@@ -61,12 +65,14 @@ def upload(interview_id: int, datei: UploadFile, db: Db):
 
 
 @router.get("/{recording_id}", response_model=RecordingOut)
-def get_recording(interview_id: int, recording_id: int, db: Db):
+def get_recording(interview_id: int, recording_id: int, db: Db, me: Me):
+    access.interview(db, me, interview_id)
     return _recording(db, interview_id, recording_id)
 
 
 @router.get("/{recording_id}/datei")
-def download(interview_id: int, recording_id: int, db: Db):
+def download(interview_id: int, recording_id: int, db: Db, me: Me):
+    access.interview(db, me, interview_id)
     recording = _recording(db, interview_id, recording_id)
     path = transcription.file_path(recording)
     if not path.is_file():
@@ -75,7 +81,8 @@ def download(interview_id: int, recording_id: int, db: Db):
 
 
 @router.delete("/{recording_id}", status_code=204)
-def delete(interview_id: int, recording_id: int, db: Db):
+def delete(interview_id: int, recording_id: int, db: Db, me: Me):
+    access.editable_interview(db, me, interview_id)
     recording = _recording(db, interview_id, recording_id)
     audit.log(db, "aufnahme", recording.id, "geloescht")
     db.delete(recording)
@@ -85,7 +92,8 @@ def delete(interview_id: int, recording_id: int, db: Db):
 
 
 @router.post("/{recording_id}/transkription", response_model=RecordingOut, status_code=202)
-def start_transcription(interview_id: int, recording_id: int, body: TranscriptionStart, db: Db):
+def start_transcription(interview_id: int, recording_id: int, body: TranscriptionStart, db: Db, me: Me):
+    access.editable_interview(db, me, interview_id)
     recording = _recording(db, interview_id, recording_id)
     _require_idle(recording)
     defaults = settings_service.transcription(db)
@@ -106,8 +114,9 @@ def start_transcription(interview_id: int, recording_id: int, body: Transcriptio
 
 
 @router.put("/{recording_id}/transkript", response_model=RecordingOut)
-def update_transcript(interview_id: int, recording_id: int, body: TranscriptUpdate, db: Db):
+def update_transcript(interview_id: int, recording_id: int, body: TranscriptUpdate, db: Db, me: Me):
     """Korrekturen am Transkript, z. B. falsch erkannte Namen."""
+    access.editable_interview(db, me, interview_id)
     recording = _recording(db, interview_id, recording_id)
     _require_idle(recording)
     if recording.transkript != body.transkript:
@@ -119,7 +128,8 @@ def update_transcript(interview_id: int, recording_id: int, body: TranscriptUpda
 
 
 @router.get("/{recording_id}/transkript.md")
-def download_transcript(interview_id: int, recording_id: int, db: Db):
+def download_transcript(interview_id: int, recording_id: int, db: Db, me: Me):
+    access.interview(db, me, interview_id)
     recording = _recording(db, interview_id, recording_id)
     if not recording.transkript.strip():
         raise HTTPException(status_code=404, detail="Noch kein Transkript vorhanden.")

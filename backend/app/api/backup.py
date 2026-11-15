@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Response, UploadFile
 from pydantic import BaseModel
 
+from app.api.access import Admin
 from app.api.deps import Db
 from app.services import audit
 from app.services import restore
@@ -32,7 +33,7 @@ class SafetyCopyOut(BaseModel):
 
 
 @router.get("/backup")
-def download_backup(db: Db) -> Response:
+def download_backup(db: Db, me: Admin) -> Response:
     data = build_backup(db)
     audit.log(db, "backup", 0, "heruntergeladen")
     db.commit()
@@ -51,7 +52,7 @@ def _run(action) -> dict:
 
 
 @router.post("/restore", response_model=RestoreOut)
-def restore_upload(datei: UploadFile, db: Db):
+def restore_upload(datei: UploadFile, db: Db, me: Admin):
     """Ersetzt ALLE Daten durch das Backup (ZIP der App oder .db). Der vorherige Stand wird vorher kopiert."""
     db.close()  # die Anfrage-Sitzung darf die Datenbank beim Kopieren nicht sperren
     with tempfile.TemporaryDirectory(prefix="restore_") as tmp:
@@ -67,7 +68,7 @@ def restore_upload(datei: UploadFile, db: Db):
 
 
 @router.get("/restore/sicherungskopien", response_model=list[SafetyCopyOut])
-def list_safety_copies():
+def list_safety_copies(me: Admin):
     try:
         return restore.safety_copies()
     except restore.RestoreError:
@@ -75,7 +76,7 @@ def list_safety_copies():
 
 
 @router.post("/restore/sicherungskopien/{name}", response_model=RestoreOut)
-def restore_safety_copy(name: str, db: Db):
+def restore_safety_copy(name: str, db: Db, me: Admin):
     """Macht eine Wiederherstellung rückgängig: holt den Stand von davor zurück."""
     db.close()
 

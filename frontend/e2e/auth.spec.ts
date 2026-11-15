@@ -5,9 +5,10 @@ test('ohne Anmeldung landet man auf der Login-Seite und danach am Ziel', async (
   await page.goto('/interviews')
   await expect(page).toHaveURL(/\/login\?weiter=(%2F|\/)interviews$/)
 
+  await page.getByLabel('Benutzername').fill('admin')
   await page.getByLabel('Passwort').fill('falsch')
   await page.getByRole('button', { name: 'Anmelden' }).click()
-  await expect(page.getByRole('alert')).toHaveText('Das Passwort ist falsch.')
+  await expect(page.getByRole('alert')).toHaveText('Benutzername oder Passwort ist falsch.')
 
   await page.getByLabel('Passwort').fill('e2e-passwort')
   await page.getByRole('button', { name: 'Anmelden' }).click()

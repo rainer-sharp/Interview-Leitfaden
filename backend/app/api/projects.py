@@ -2,6 +2,8 @@
 from fastapi import APIRouter, HTTPException, Response
 from sqlalchemy.exc import IntegrityError
 
+from app.api import access
+from app.api.access import Admin, Me
 from app.api.deps import Db, attachment, get_or_404
 from app.api.schemas import (
     ProjectAnalysisOut,
@@ -10,7 +12,7 @@ from app.api.schemas import (
     ProjectIn,
     ProjectOut,
 )
-from app.models import Project
+from app.models import Project, User
 from app.services import audit
 from app.services import evaluation as evaluation_service
 from app.services import export
@@ -33,6 +35,7 @@ def project_out(db: Db, project: Project) -> dict:
         "gruppen": len(project.groups),
         "kataloge": sum(len(g.questionnaires) for g in project.groups),
         "interviews": service.interview_count(db, project.id),
+        "mitglieder": [{"id": u.id, "name": u.name, "benutzername": u.benutzername} for u in project.members],
     }
 
 
@@ -45,20 +48,25 @@ def _commit(db: Db) -> None:
 
 
 @router.get("", response_model=list[ProjectOut])
-def list_projects(db: Db):
+def list_projects(db: Db, me: Me):
     service.default_project(db)  # es gibt immer mindestens eins
     db.commit()
-    return [project_out(db, p) for p in db.query(Project).order_by(Project.name).all()]
+    query = db.query(Project)
+    visible = access.visible_project_ids(db, me)
+    if visible is not None:
+        query = query.filter(Project.id.in_(visible))
+    return [project_out(db, p) for p in query.order_by(Project.name).all()]
 
 
 @router.post("", response_model=ProjectOut, status_code=201)
-def create_project(body: ProjectIn, db: Db):
+def create_project(body: ProjectIn, db: Db, me: Me):
     project = Project(
         name=body.name,
         beschreibung=body.beschreibung,
         ki_anweisung=body.ki_anweisung.strip(),
         ki_analyse_anweisung=(body.ki_analyse_anweisung or "").strip(),
     )
+    project.members.append(db.get(User, me.id))  # wer anlegt, sieht das Projekt auch
     db.add(project)
     _commit(db)
     audit.log(db, "projekt", project.id, "angelegt")
@@ -67,13 +75,13 @@ def create_project(body: ProjectIn, db: Db):
 
 
 @router.get("/{project_id}", response_model=ProjectOut)
-def get_project(project_id: int, db: Db):
-    return project_out(db, get_or_404(db, Project, project_id))
+def get_project(project_id: int, db: Db, me: Me):
+    return project_out(db, access.project(db, me, project_id))
 
 
 @router.put("/{project_id}", response_model=ProjectOut)
-def update_project(project_id: int, body: ProjectIn, db: Db):
-    project = get_or_404(db, Project, project_id)
+def update_project(project_id: int, body: ProjectIn, db: Db, me: Me):
+    project = access.project(db, me, project_id)
     project.name, project.beschreibung = body.name, body.beschreibung
     project.ki_anweisung = body.ki_anweisung.strip()
     if body.ki_analyse_anweisung is not None:
@@ -83,13 +91,14 @@ def update_project(project_id: int, body: ProjectIn, db: Db):
 
 
 @router.post("/{project_id}/kopie", response_model=ProjectOut, status_code=201)
-def copy_project(project_id: int, body: ProjectCopyIn, db: Db):
+def copy_project(project_id: int, body: ProjectCopyIn, db: Db, me: Me):
     """Neues Projekt mit Kopien aller Gruppen, Kataloge und Fragen; Interviews werden nicht kopiert."""
-    source = get_or_404(db, Project, project_id)
+    source = access.project(db, me, project_id)
     name = body.name or service.copy_name(db, source.name)
     if db.query(Project).filter(Project.name == name).first() is not None:
         raise HTTPException(status_code=409, detail=DUPLICATE)
     copy = service.copy_project(db, source, name, body.beschreibung)
+    copy.members.append(db.get(User, me.id))
     _commit(db)
     audit.log(db, "projekt", copy.id, f"kopiert-von-{source.id}")
     db.commit()
@@ -97,8 +106,8 @@ def copy_project(project_id: int, body: ProjectCopyIn, db: Db):
 
 
 @router.delete("/{project_id}", status_code=204)
-def delete_project(project_id: int, db: Db):
-    project = get_or_404(db, Project, project_id)
+def delete_project(project_id: int, db: Db, me: Admin):
+    project = access.project(db, me, project_id)
     if service.interview_count(db, project.id):
         raise HTTPException(status_code=409, detail="Das Projekt hat Interviews. Bitte diese zuerst löschen.")
     if db.query(Project).count() == 1:
@@ -109,6 +118,19 @@ def delete_project(project_id: int, db: Db):
     return Response(status_code=204)
 
 
+@router.put("/{project_id}/mitglieder", response_model=ProjectOut)
+def set_members(project_id: int, body: list[int], db: Db, me: Admin):
+    """Legt fest, welche Benutzer das Projekt sehen (für Admins ohne Wirkung, sie sehen alles)."""
+    project = access.project(db, me, project_id)
+    members = db.query(User).filter(User.id.in_(body)).all()
+    if len(members) != len(set(body)):
+        raise HTTPException(status_code=422, detail="Unbekannter Benutzer in der Liste.")
+    project.members = members
+    audit.log(db, "projekt", project.id, "mitglieder-geaendert")
+    db.commit()
+    return project_out(db, project)
+
+
 # ------------------------------------------------------------------ Sammelexport
 EXPORTS = {
     "md": ("text/markdown; charset=utf-8", project_export.to_markdown),
@@ -117,11 +139,11 @@ EXPORTS = {
 
 
 @router.get("/{project_id}/export.{fmt}")
-def export_project(project_id: int, fmt: str, db: Db, nur_transkripte: bool = False):
+def export_project(project_id: int, fmt: str, db: Db, me: Me, nur_transkripte: bool = False):
     """Alle Interviews des Projekts in einer Datei (Markdown oder JSON); nur_transkripte=true: nur Transkripte."""
     if fmt not in EXPORTS:
         raise HTTPException(status_code=404, detail="Unbekanntes Exportformat")
-    project = get_or_404(db, Project, project_id)
+    project = access.project(db, me, project_id)
     media_type, render = EXPORTS[fmt]
     name = project_export.filename(project, fmt, "-transkripte" if nur_transkripte else "-interviews")
     return Response(render(db, project, nur_transkripte), media_type=media_type, headers=attachment(name))
@@ -152,13 +174,13 @@ def _require_idle(project: Project) -> None:
 
 
 @router.get("/{project_id}/analyse", response_model=ProjectAnalysisOut)
-def get_analysis(project_id: int, db: Db):
-    return _analysis_out(db, get_or_404(db, Project, project_id))
+def get_analysis(project_id: int, db: Db, me: Me):
+    return _analysis_out(db, access.project(db, me, project_id))
 
 
 @router.post("/{project_id}/analyse", response_model=ProjectAnalysisOut, status_code=202)
-def start_analysis(project_id: int, db: Db):
-    project = get_or_404(db, Project, project_id)
+def start_analysis(project_id: int, db: Db, me: Me):
+    project = access.project(db, me, project_id)
     _require_idle(project)
     if not any(project_analysis.has_content(i) for i in project_export.interviews_of(db, project)):
         raise HTTPException(status_code=422, detail="Das Projekt hat noch keine Interviews mit Notizen oder Transkript.")
@@ -170,8 +192,8 @@ def start_analysis(project_id: int, db: Db):
 
 
 @router.put("/{project_id}/analyse", response_model=ProjectAnalysisOut)
-def update_analysis(project_id: int, body: ProjectAnalysisUpdate, db: Db):
-    project = get_or_404(db, Project, project_id)
+def update_analysis(project_id: int, body: ProjectAnalysisUpdate, db: Db, me: Me):
+    project = access.project(db, me, project_id)
     _require_idle(project)
     analysis = project.analysis
     if analysis is None or not (analysis.analyse or analysis.kurzfassung):
@@ -186,8 +208,8 @@ def update_analysis(project_id: int, body: ProjectAnalysisUpdate, db: Db):
 
 
 @router.delete("/{project_id}/analyse", status_code=204)
-def delete_analysis(project_id: int, db: Db):
-    project = get_or_404(db, Project, project_id)
+def delete_analysis(project_id: int, db: Db, me: Me):
+    project = access.project(db, me, project_id)
     if project.analysis is not None:
         db.delete(project.analysis)
         audit.log(db, "projekt-analyse", project.id, "analyse-geloescht")
@@ -202,10 +224,10 @@ ANALYSIS_DOWNLOADS = {
 
 
 @router.get("/{project_id}/analyse.{fmt}")
-def download_analysis(project_id: int, fmt: str, db: Db):
+def download_analysis(project_id: int, fmt: str, db: Db, me: Me):
     if fmt not in ANALYSIS_DOWNLOADS:
         raise HTTPException(status_code=404, detail="Unbekanntes Format")
-    project = get_or_404(db, Project, project_id)
+    project = access.project(db, me, project_id)
     analysis = project.analysis
     if analysis is None or not (analysis.analyse.strip() or analysis.kurzfassung.strip()):
         raise HTTPException(status_code=404, detail="Noch keine Analyse vorhanden.")

@@ -12,6 +12,38 @@ class Base(DeclarativeBase):
     pass
 
 
+class User(Base):
+    """Benutzerkonto. Rolle admin: alles; interviewer: zugewiesene Projekte, ändert nur eigene Interviews."""
+
+    __tablename__ = "app_user"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    benutzername: Mapped[str] = mapped_column(String(100), unique=True)
+    name: Mapped[str] = mapped_column(String(200), default="")  # Anzeigename
+    passwort_hash: Mapped[str] = mapped_column(String(300))
+    rolle: Mapped[str] = mapped_column(String(20), default="interviewer")  # admin | interviewer
+    aktiv: Mapped[bool] = mapped_column(default=True)
+    # Wird bei Passwortänderung oder Sperre erhöht: alle bestehenden Sitzungen des Kontos verfallen.
+    sitzungs_version: Mapped[int] = mapped_column(Integer, default=1)
+    angelegt_am: Mapped[datetime] = mapped_column(DateTime, default=now)
+    letzte_anmeldung: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    projects: Mapped[list["Project"]] = relationship(secondary="project_member", back_populates="members")
+
+    @property
+    def is_admin(self) -> bool:
+        return self.rolle == "admin"
+
+
+class ProjectMember(Base):
+    """Welche Interviewer ein Projekt sehen (Admins sehen alles)."""
+
+    __tablename__ = "project_member"
+
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("app_user.id", ondelete="CASCADE"), primary_key=True, index=True)
+
+
 class Project(Base):
     """Klammer um Gruppen (mit ihren Katalogen) und damit um deren Interviews."""
 
@@ -31,6 +63,9 @@ class Project(Base):
     )
     analysis: Mapped["ProjectAnalysis | None"] = relationship(
         back_populates="project", cascade="all, delete-orphan", uselist=False
+    )
+    members: Mapped[list[User]] = relationship(
+        secondary="project_member", back_populates="projects", order_by="User.benutzername"
     )
 
 
@@ -93,8 +128,11 @@ class Interview(Base):
     datum: Mapped[date] = mapped_column(Date)
     status: Mapped[str] = mapped_column(String(20), default="laufend")  # laufend | abgeschlossen
     gesamtnotiz: Mapped[str] = mapped_column(Text, default="")
+    # Wer das Interview führt; nur diese Person (und Admins) darf es ändern. NULL = Konto gelöscht.
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("app_user.id", ondelete="SET NULL"), index=True, nullable=True)
 
     questionnaire: Mapped[Questionnaire] = relationship(back_populates="interviews")
+    interviewer: Mapped[User | None] = relationship()
     answers: Mapped[list["Answer"]] = relationship(
         back_populates="interview", cascade="all, delete-orphan", order_by="Answer.position"
     )
@@ -199,6 +237,7 @@ class AuditLog(Base):
     __tablename__ = "audit_log"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    benutzer_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # bewusst ohne Fremdschlüssel
     entitaet: Mapped[str] = mapped_column(String(100))
     aktion: Mapped[str] = mapped_column(String(50))
     zeitpunkt: Mapped[datetime] = mapped_column(DateTime, default=now)

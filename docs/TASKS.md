@@ -17,6 +17,7 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“). Abw
 - [x] 13 Restore: Backup-ZIP oder tägliche .db in der App bzw. per scripts/restore.sh, mit Sicherungskopie und Rückgängig
 - [x] 14 Projekte: Gruppen und Interviews je Projekt, Projekt kopieren (mit Gruppen/Katalogen), KI-Anweisung je Projekt
 - [x] 15 Projekt: alle Interviews/Transkripte als Markdown/JSON, KI-Analyse mit Kurzzusammenfassung, Export MD/PDF
+- [x] 16 Mehrbenutzer (Intranet): Konten mit Rollen Admin/Interviewer, Projektzuordnung, Benutzerverwaltung, Mein Konto
 
 ## Offen
 
@@ -42,5 +43,7 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“). Abw
   sowie Downgrade geprüft. Vor dem Update auf dem Server: Backup (macht `scripts/update.sh` automatisch).
 - Paket 15: E2E (`e2e/projects.spec.ts`, zweiter Test) lief hier nicht (libatk fehlt). Sehr große Projekte werden
   gekürzt statt per Map-Reduce analysiert (siehe QUESTIONS 40).
-- Version 2 laut SPEC: Folgefragen, Antwort-Typen, Zeitmessung, Gruppenauswertung, Rollen. (LLM-Zusammenfassung je
+- Paket 16: E2E (`e2e/users.spec.ts`, angepasster Login in allen E2E-Tests) lief hier nicht (libatk fehlt).
+  Update gegen eine Datenbank vom Stand 0005 mit echtem uvicorn geprüft. Kein Internet-Betrieb (QUESTIONS 49).
+- Version 2 laut SPEC: Folgefragen, Antwort-Typen, Zeitmessung, Gruppenauswertung. (LLM-Zusammenfassung je
   Interview: Paket 12; über mehrere Interviews einer Gruppe noch offen.)

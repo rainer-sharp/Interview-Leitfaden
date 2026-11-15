@@ -5,8 +5,10 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 
-from app.api.auth import require_auth, router as auth_router
+from app.api.access import current_user
+from app.api.auth import router as auth_router
 from app.api.backup import router as backup_router
 from app.api.catalogs import router as catalogs_router
 from app.api.evaluation import router as evaluation_router
@@ -15,8 +17,10 @@ from app.api.interviews import router as interviews_router
 from app.api.projects import router as projects_router
 from app.api.recordings import router as recordings_router
 from app.api.settings import llm_router, router as settings_router
+from app.api.users import router as users_router
 from app.config import get_settings, validate_secrets
-from app.services import evaluation
+from app.db import get_engine
+from app.services import evaluation, users
 from app.services.transcription import worker
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -26,6 +30,8 @@ STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 async def lifespan(_app: FastAPI):
     settings = get_settings()
     validate_secrets(settings)
+    with Session(get_engine()) as db:
+        users.ensure_admin(db)  # erstes Konto „admin“ aus ADMIN_PASSWORD, falls es noch keins gibt
     if settings.transcription_worker:
         worker.start()
         evaluation.worker.start()
@@ -61,9 +67,9 @@ def health() -> dict[str, str]:
 app.include_router(auth_router, prefix="/api")
 for protected in (
     projects_router, catalogs_router, imports_router, interviews_router, recordings_router, evaluation_router,
-    settings_router, llm_router, backup_router,
+    settings_router, llm_router, backup_router, users_router,
 ):
-    app.include_router(protected, prefix="/api", dependencies=[Depends(require_auth)])
+    app.include_router(protected, prefix="/api", dependencies=[Depends(current_user)])
 
 if (STATIC_DIR / "assets").is_dir():
     app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")

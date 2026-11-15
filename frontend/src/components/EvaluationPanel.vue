@@ -6,7 +6,10 @@ import { EVALUATION_STATUS_LABEL, evaluationBusy, sourcesHint } from '../stores/
 import { elapsed } from '../stores/recordings'
 import type { Evaluation, Recording } from '../types'
 
-const props = defineProps<{ interviewId: number; recordings: Recording[]; projectId?: number }>()
+const props = withDefaults(
+  defineProps<{ interviewId: number; recordings: Recording[]; projectId?: number; canEdit?: boolean }>(),
+  { canEdit: true },
+)
 
 const evaluation = ref<Evaluation | null>(null)
 const draft = ref('')
@@ -119,11 +122,11 @@ onBeforeUnmount(() => clearInterval(timer))
           </template>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button v-if="!busy" class="btn" :class="{ 'btn-primary': !hasText }" @click="start">
+          <button v-if="canEdit && !busy" class="btn" :class="{ 'btn-primary': !hasText }" @click="start">
             {{ hasText ? 'Neu bewerten' : 'Interview bewerten' }}
           </button>
           <button
-            v-if="evaluation.status !== 'keine' && !confirmDelete"
+            v-if="canEdit && evaluation.status !== 'keine' && !confirmDelete"
             class="btn btn-danger"
             @click="confirmDelete = true"
           >
@@ -161,11 +164,11 @@ onBeforeUnmount(() => clearInterval(timer))
           id="bewertung-text"
           v-model="draft"
           class="input min-h-96 text-sm leading-relaxed"
-          :readonly="busy"
+          :readonly="busy || !canEdit"
           data-testid="evaluation-text"
         ></textarea>
         <div class="flex flex-wrap gap-2">
-          <button class="btn" :disabled="draft === evaluation.text || busy || !draft.trim()" @click="save">
+          <button v-if="canEdit" class="btn" :disabled="draft === evaluation.text || busy || !draft.trim()" @click="save">
             Korrekturen speichern
           </button>
           <a :href="`/api${base}.pdf`" class="btn" download>Bewertung (PDF)</a>

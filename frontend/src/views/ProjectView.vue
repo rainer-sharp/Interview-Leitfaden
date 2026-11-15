@@ -4,7 +4,8 @@ import { RouterLink, useRouter } from 'vue-router'
 import { api } from '../api'
 import ProjectAnalysisPanel from '../components/ProjectAnalysisPanel.vue'
 import { currentProjectId, loadProjects, setCurrentProject } from '../stores/project'
-import type { LlmSettings, Project } from '../types'
+import { isAdmin } from '../stores/session'
+import type { Account, LlmSettings, Project } from '../types'
 
 const props = defineProps<{ id: number }>()
 const router = useRouter()
@@ -16,6 +17,9 @@ const general = reactive<Record<Field, string>>({ ki_anweisung: '', ki_analyse_a
 const form = reactive({ name: '', beschreibung: '', ki_anweisung: '', ki_analyse_anweisung: '' })
 const own = reactive<Record<Field, boolean>>({ ki_anweisung: false, ki_analyse_anweisung: false })
 const onlyTranscripts = ref(false)
+const accounts = ref<Account[]>([])
+const members = ref<number[]>([])
+const membersMessage = ref('')
 const error = ref('')
 const message = ref('')
 
@@ -52,6 +56,17 @@ function fill(values: Project) {
   })
   own.ki_anweisung = !!values.ki_anweisung
   own.ki_analyse_anweisung = !!values.ki_analyse_anweisung
+  members.value = values.mitglieder.map((m) => m.id)
+}
+
+async function saveMembers() {
+  error.value = membersMessage.value = ''
+  try {
+    fill(await api.put<Project>(`/projekte/${props.id}/mitglieder`, members.value))
+    membersMessage.value = 'Gespeichert.'
+  } catch (e) {
+    error.value = (e as Error).message
+  }
 }
 
 function toggleOwn(field: Field) {
@@ -92,6 +107,7 @@ onMounted(async () => {
     const llm = await api.get<LlmSettings>('/einstellungen/llm')
     general.ki_anweisung = llm.anweisung
     general.ki_analyse_anweisung = llm.analyse_anweisung
+    if (isAdmin.value) accounts.value = (await api.get<Account[]>('/benutzer')).filter((a) => a.rolle === 'interviewer')
   } catch (e) {
     error.value = (e as Error).message
   }
@@ -130,6 +146,31 @@ onMounted(async () => {
       </section>
 
       <ProjectAnalysisPanel :project-id="id" />
+
+      <section class="card space-y-3" data-testid="project-members">
+        <h2 class="font-semibold">Zugeordnete Interviewer</h2>
+        <p class="muted">
+          Sie sehen das Projekt mit allen Interviews und führen eigene Interviews darin. Admins sehen alle Projekte.
+        </p>
+        <template v-if="isAdmin">
+          <p v-if="!accounts.length" class="muted">
+            Noch keine Interviewer-Konten. Anlegen unter <RouterLink to="/benutzer" class="link">Benutzer</RouterLink>.
+          </p>
+          <div v-else class="flex flex-wrap gap-x-4 gap-y-1">
+            <label v-for="account in accounts" :key="account.id" class="inline-flex items-center gap-2 text-sm">
+              <input v-model="members" type="checkbox" :value="account.id" />
+              {{ account.name }}<span v-if="!account.aktiv" class="text-stone-500">(gesperrt)</span>
+            </label>
+          </div>
+          <div v-if="accounts.length" class="flex flex-wrap items-center gap-3">
+            <button class="btn" @click="saveMembers">Zuordnung speichern</button>
+            <span v-if="membersMessage" class="text-sm text-accent-800" role="status">{{ membersMessage }}</span>
+          </div>
+        </template>
+        <p v-else class="text-sm">
+          {{ project.mitglieder.map((m) => m.name).join(', ') || 'keine' }}
+        </p>
+      </section>
 
       <form class="card space-y-4" data-testid="project-settings" @submit.prevent="save">
         <h2 class="font-semibold">Projekt bearbeiten</h2>

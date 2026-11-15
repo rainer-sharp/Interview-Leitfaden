@@ -36,6 +36,8 @@ def meta(interview: Interview) -> list[tuple[str, str]]:
         ("Fragenkatalog", f"{catalog.name} (Version {catalog.version})"),
         ("Status", interview.status),
     ]
+    if interview.interviewer is not None:
+        rows.append(("Interviewer", interview.interviewer.name))
     return rows
 
 

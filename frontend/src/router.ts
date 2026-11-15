@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { setUnauthorizedHandler } from './api'
-import { checkSession, loggedIn } from './stores/session'
+import { checkSession, currentUser, isAdmin, loggedIn } from './stores/session'
 import { reloadApp, updateAvailable } from './stores/version'
 import BackupView from './views/BackupView.vue'
 import CatalogEditorView from './views/CatalogEditorView.vue'
@@ -14,6 +14,8 @@ import InterviewView from './views/InterviewView.vue'
 import ProjectsView from './views/ProjectsView.vue'
 import ProjectView from './views/ProjectView.vue'
 import SettingsView from './views/SettingsView.vue'
+import UsersView from './views/UsersView.vue'
+import AccountView from './views/AccountView.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -27,8 +29,10 @@ export const router = createRouter({
     { path: '/interviews/neu', component: InterviewStartView },
     { path: '/projekte', component: ProjectsView },
     { path: '/projekte/:id', component: ProjectView, props: (r) => ({ id: Number(r.params.id) }) },
-    { path: '/einstellungen', component: SettingsView },
-    { path: '/sicherung', component: BackupView },
+    { path: '/einstellungen', component: SettingsView, meta: { admin: true } },
+    { path: '/benutzer', component: UsersView, meta: { admin: true } },
+    { path: '/konto', component: AccountView },
+    { path: '/sicherung', component: BackupView, meta: { admin: true } },
     {
       path: '/interviews/:id',
       component: InterviewView,
@@ -46,12 +50,15 @@ router.beforeEach(async (to, from) => {
     return false
   }
   if (to.meta.public) return true
-  if (await checkSession()) return true
-  return { path: '/login', query: { weiter: to.fullPath } }
+  if (!(await checkSession())) return { path: '/login', query: { weiter: to.fullPath } }
+  // Admin-Seiten: der Server prüft ohnehin; hier nur, damit niemand auf einer leeren Seite landet
+  if (to.meta.admin && !isAdmin.value) return { path: '/' }
+  return true
 })
 
 setUnauthorizedHandler(() => {
   loggedIn.value = false
+  currentUser.value = null
   const current = router.currentRoute.value
   if (!current.meta.public) router.replace({ path: '/login', query: { weiter: current.fullPath } })
 })

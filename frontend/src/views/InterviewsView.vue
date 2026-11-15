@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '../api'
 import { currentProject, currentProjectId, ensureProject } from '../stores/project'
+import { currentUser } from '../stores/session'
 import { formatDate } from '../stores/interviewState'
 import type { InterviewSummary } from '../types'
 
@@ -11,6 +12,10 @@ const loaded = ref(false)
 const error = ref('')
 const confirmDelete = ref<number | null>(null)
 const allProjects = ref(false)
+const onlyMine = ref(false)
+const shown = computed(() =>
+  onlyMine.value ? interviews.value.filter((i) => i.interviewer_id === currentUser.value?.id) : interviews.value,
+)
 
 async function load() {
   try {
@@ -48,14 +53,17 @@ watch([currentProjectId, allProjects], load)
       </div>
       <RouterLink to="/interviews/neu" class="btn btn-primary">Neues Interview</RouterLink>
     </div>
-    <label class="flex items-center gap-2 text-sm">
-      <input v-model="allProjects" type="checkbox" /> Interviews aller Projekte zeigen
-    </label>
+    <div class="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+      <label class="flex items-center gap-2"><input v-model="onlyMine" type="checkbox" /> Nur meine Interviews</label>
+      <label class="flex items-center gap-2">
+        <input v-model="allProjects" type="checkbox" /> Interviews aller (meiner) Projekte zeigen
+      </label>
+    </div>
     <p v-if="error" class="error-box" role="alert">{{ error }}</p>
 
-    <ul v-if="interviews.length" class="space-y-2">
+    <ul v-if="shown.length" class="space-y-2">
       <li
-        v-for="interview in interviews"
+        v-for="interview in shown"
         :key="interview.id"
         class="card flex flex-wrap items-center justify-between gap-3"
         data-testid="interview-row"
@@ -69,7 +77,7 @@ watch([currentProjectId, allProjects], load)
           <div class="muted">
             {{ formatDate(interview.datum) }} · <template v-if="allProjects">{{ interview.projekt_name }} · </template
             >{{ interview.group_name }} · {{ interview.questionnaire_name }}
-            (V{{ interview.version }})
+            (V{{ interview.version }}) · {{ interview.interviewer_name }}
           </div>
           <div class="mt-1 flex items-center gap-2 text-xs">
             <span
@@ -88,9 +96,11 @@ watch([currentProjectId, allProjects], load)
         </div>
         <div v-else class="flex flex-wrap gap-2">
           <RouterLink :to="`/interviews/${interview.id}`" class="btn btn-primary">
-            {{ interview.status === 'laufend' ? 'Fortsetzen' : 'Ansehen' }}
+            {{ interview.status === 'laufend' && interview.darf_bearbeiten ? 'Fortsetzen' : 'Ansehen' }}
           </RouterLink>
-          <button class="btn btn-danger" @click="confirmDelete = interview.id">Löschen</button>
+          <button v-if="interview.darf_bearbeiten" class="btn btn-danger" @click="confirmDelete = interview.id">
+            Löschen
+          </button>
         </div>
       </li>
     </ul>

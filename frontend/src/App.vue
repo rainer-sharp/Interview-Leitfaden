@@ -2,7 +2,7 @@
 import { watch } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { currentProjectId, loadProjects, projects, setCurrentProject } from './stores/project'
-import { logout } from './stores/session'
+import { currentUser, isAdmin, logout } from './stores/session'
 import { reloadApp, updateAvailable } from './stores/version'
 
 const route = useRoute()
@@ -57,10 +57,16 @@ async function signOut() {
       <RouterLink to="/projekte" class="nav-link">Projekte</RouterLink>
       <RouterLink to="/" class="nav-link">Gruppen</RouterLink>
       <RouterLink to="/interviews" class="nav-link">Interviews</RouterLink>
-      <RouterLink to="/einstellungen" class="nav-link">Einstellungen</RouterLink>
-      <RouterLink to="/sicherung" class="nav-link">Sicherung</RouterLink>
+      <template v-if="isAdmin">
+        <RouterLink to="/einstellungen" class="nav-link">Einstellungen</RouterLink>
+        <RouterLink to="/sicherung" class="nav-link">Sicherung</RouterLink>
+        <RouterLink to="/benutzer" class="nav-link">Benutzer</RouterLink>
+      </template>
       <div class="ml-auto flex items-center gap-2">
         <RouterLink to="/interviews/neu" class="btn btn-primary">Neues Interview</RouterLink>
+        <RouterLink v-if="currentUser" to="/konto" class="nav-link text-sm" title="Mein Konto" data-testid="current-user">
+          {{ currentUser.name }}
+        </RouterLink>
         <button class="btn" @click="signOut">Abmelden</button>
       </div>
     </nav>

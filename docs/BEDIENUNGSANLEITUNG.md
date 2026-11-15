@@ -24,6 +24,7 @@ der [Installationsanleitung](INSTALLATION.md).
 14. [Sicherung und Wiederherstellung](#14-sicherung-und-wiederherstellung)
 15. [Datenschutz im Alltag](#15-datenschutz-im-alltag)
 16. [Häufige Fragen](#16-häufige-fragen)
+17. [Benutzer und Rollen](#17-benutzer-und-rollen)
 
 ---
 
@@ -51,7 +52,11 @@ Projekt               z. B. „Lieferantenbefragung 2026“
 ## 2. Anmelden und Aufbau der Oberfläche
 
 Rufen Sie die Adresse auf, die Sie von Ihrer Administration erhalten haben (z. B. `http://192.168.1.50:8080`), und
-geben Sie das Passwort ein. Die Anmeldung bleibt auf diesem Gerät 14 Tage gültig.
+geben Sie Ihren **Benutzernamen** und Ihr **Passwort** ein (Groß-/Kleinschreibung beim Benutzernamen ist egal). Die
+Anmeldung bleibt auf diesem Gerät 14 Tage gültig. Ihr Passwort ändern Sie unter **Mein Konto** – ein Klick auf Ihren
+Namen oben rechts.
+
+Je nach **Rolle** sehen Sie nicht alle Menüpunkte (Abschnitt 17).
 
 Oben auf jeder Seite steht die **Navigation**:
 
@@ -62,8 +67,10 @@ Oben auf jeder Seite steht die **Navigation**:
 | **Projekte** | Projekte anlegen, kopieren, auswerten. |
 | **Gruppen** | Die Personengruppen des aktuellen Projekts. |
 | **Interviews** | Liste der Interviews des aktuellen Projekts. |
-| **Einstellungen** | Server für Transkription und KI. |
-| **Sicherung** | Backup herunterladen und wiederherstellen. |
+| **Einstellungen** | Server für Transkription und KI. *(nur Admin)* |
+| **Sicherung** | Backup herunterladen und wiederherstellen. *(nur Admin)* |
+| **Benutzer** | Konten anlegen und Projekten zuordnen. *(nur Admin)* |
+| **Ihr Name** | Mein Konto: Passwort ändern. |
 | **Neues Interview** | Startet ein Interview. |
 | **Abmelden** | Meldet ab und lädt die Seite neu. |
 
@@ -431,6 +438,12 @@ Ganz unten auf der Seite steht der **Programmstand** (Versionskennung).
 
 ## 16. Häufige Fragen
 
+**Ich kann ein Interview nicht ändern, oben steht „Dieses Interview führt …“.**
+Es gehört einer anderen Person. Lesen und exportieren dürfen Sie es; ändern dürfen nur diese Person und Admins.
+
+**Ich sehe ein Projekt nicht.**
+Sie sind ihm nicht zugeordnet. Ein Admin ordnet Sie unter **Benutzer** oder auf der Projektseite zu.
+
 **Ich sehe meine Gruppen oder Interviews nicht mehr.**
 Prüfen Sie oben die **Projektauswahl** – angezeigt wird immer nur das aktuelle Projekt. Unter **Interviews** zeigt
 das Häkchen **Interviews aller Projekte zeigen** alles.
@@ -463,3 +476,41 @@ Auf den gelben Balken **Jetzt neu laden** klicken oder **Strg+Shift+R** drücken
 **Wie bekomme ich alle Interviews für eine Auswertung in Excel?**
 Jedes Interview hat den Export **CSV (Excel)**. Für alle Interviews auf einmal: **Sicherung → Backup herunterladen**;
 im ZIP liegt `alle-interviews.csv`.
+
+## 17. Benutzer und Rollen
+
+Jede Person hat ein eigenes Konto mit einer von zwei Rollen.
+
+| | Interviewer | Admin |
+| --- | --- | --- |
+| Projekte sehen | die zugeordneten und selbst angelegten | alle |
+| Interviews anderer im Projekt | lesen und exportieren | lesen, ändern, löschen |
+| Eigene Interviews führen, ändern, löschen | ja | ja |
+| Aufnahmen, Transkription, KI-Bewertung | für eigene Interviews | für alle |
+| Projekte anlegen, kopieren, bearbeiten, KI-Anweisungen | ja (wird beim Anlegen Mitglied) | ja |
+| Gruppen und Kataloge pflegen, Fragen importieren | in seinen Projekten | überall |
+| Sammelexport und KI-Analyse eines Projekts | in seinen Projekten | überall |
+| Projekte löschen, Interviewer zuordnen | – | ja |
+| Einstellungen, Sicherung, Benutzerverwaltung | – | ja |
+
+Wer ein Interview startet, wird dessen **Interviewer**. Das steht in der Interview-Liste, im Interview oben und in
+allen Exporten.
+
+### Benutzer verwalten (Admin)
+
+Seite **Benutzer**:
+
+- **Neues Konto:** Benutzername (Buchstaben, Ziffern und `. _ - @`, ohne Leerzeichen), Anzeigename, erstes Passwort
+  (mindestens 8 Zeichen), Rolle und – bei Interviewern – die Projekte. **Konto anlegen.** Benutzername und Passwort
+  persönlich weitergeben; die Person ändert das Passwort danach unter **Mein Konto**.
+- **Bearbeiten:** Anzeigename, Rolle, Projekte, **Neues Passwort** (z. B. wenn jemand es vergessen hat) und
+  **Konto aktiv**. Ohne Häkchen ist das Konto gesperrt; die Person wird sofort überall abgemeldet. Ihre Interviews
+  bleiben erhalten.
+- **Löschen:** nur für Konten ohne Interviews. Wer Interviews geführt hat, wird gesperrt statt gelöscht, damit
+  erkennbar bleibt, wer welches Interview geführt hat.
+- Es muss immer mindestens ein aktiver Admin bleiben.
+
+Die Zuordnung zu Projekten geht auch auf der Projektseite (**Projekte → Details → Zugeordnete Interviewer**).
+
+Das Protokoll im Hintergrund vermerkt bei Änderungen, welches Konto sie ausgeführt hat (ohne Inhalte).
+

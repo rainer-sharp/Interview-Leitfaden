@@ -18,6 +18,7 @@ export interface Project {
   gruppen: number
   kataloge: number
   interviews: number
+  mitglieder: ProjectMemberInfo[]
 }
 
 export interface Group {
@@ -102,6 +103,9 @@ export interface InterviewSummary {
   status: 'laufend' | 'abgeschlossen'
   projekt_id: number
   projekt_name: string
+  interviewer_id: number | null
+  interviewer_name: string
+  darf_bearbeiten: boolean
   group_name: string
   questionnaire_name: string
   version: number
@@ -212,4 +216,24 @@ export interface SafetyCopy {
   name: string
   groesse: number
   erstellt: string
+}
+
+export type Role = 'admin' | 'interviewer'
+
+export interface Account {
+  id: number
+  benutzername: string
+  name: string
+  rolle: Role
+  aktiv: boolean
+  angelegt_am: string
+  letzte_anmeldung: string | null
+  projekte: number[]
+  interviews: number
+}
+
+export interface ProjectMemberInfo {
+  id: number
+  name: string
+  benutzername: string
 }

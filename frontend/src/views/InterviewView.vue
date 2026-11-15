@@ -54,7 +54,9 @@ const answers = computed(() => interview.value?.answers ?? [])
 const total = computed(() => answers.value.length)
 const onSummary = computed(() => index.value >= total.value)
 const current = computed<Answer | undefined>(() => answers.value[index.value])
-const readonly = computed(() => interview.value?.status !== 'laufend')
+const canEdit = computed(() => interview.value?.darf_bearbeiten ?? false)
+// Abgeschlossen oder von einer anderen Person geführt: nur lesen
+const readonly = computed(() => interview.value?.status !== 'laufend' || !canEdit.value)
 const done = computed(() => answers.value.filter((a) => a.status !== 'offen').length)
 
 const sections = computed(() => {
@@ -208,7 +210,8 @@ onBeforeUnmount(() => {
             {{ interview.person }}<span v-if="interview.organisation"> · {{ interview.organisation }}</span>
           </div>
           <div class="truncate text-xs text-stone-500">
-            {{ formatDate(interview.datum) }} · {{ interview.group_name }} · {{ interview.questionnaire_name }}
+            {{ formatDate(interview.datum) }} · {{ interview.group_name }} · {{ interview.questionnaire_name }} ·
+            {{ interview.interviewer_name }}
           </div>
         </div>
         <span
@@ -234,6 +237,13 @@ onBeforeUnmount(() => {
     </header>
 
     <p v-if="error" class="error-box mx-auto mt-3 w-full max-w-6xl" role="alert">{{ error }}</p>
+    <p
+      v-if="interview && !canEdit"
+      class="mx-auto mt-3 w-full max-w-6xl rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-950"
+      data-testid="readonly-hint"
+    >
+      Dieses Interview führt {{ interview.interviewer_name }}. Sie können es lesen und exportieren, aber nicht ändern.
+    </p>
 
     <div v-if="interview" class="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 py-6">
       <nav
@@ -281,6 +291,7 @@ onBeforeUnmount(() => {
           v-if="onSummary"
           :interview="interview"
           :readonly="readonly"
+          :can-edit="canEdit"
           @jump="go"
           @gesamtnotiz="onGesamtnotiz"
           @finish="setFinished(true)"
@@ -299,9 +310,10 @@ onBeforeUnmount(() => {
             :interview-id="id"
             :person="interview.person"
             :recordings="interview.aufnahmen"
+            :can-edit="canEdit"
             @changed="interview.aufnahmen = $event"
           />
-          <EvaluationPanel :interview-id="id" :recordings="interview.aufnahmen" :project-id="interview.projekt_id" />
+          <EvaluationPanel :interview-id="id" :recordings="interview.aufnahmen" :project-id="interview.projekt_id" :can-edit="canEdit" />
         </InterviewSummaryPane>
 
         <article v-else-if="current" class="mx-auto max-w-3xl space-y-5" data-testid="question-screen">

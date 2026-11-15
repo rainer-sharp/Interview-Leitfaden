@@ -12,7 +12,7 @@ können. Jeder Befehl ist erklärt.
 4. [Programm herunterladen](#4-programm-herunterladen)
 5. [Grundeinstellungen festlegen (.env)](#5-grundeinstellungen-festlegen-env)
 6. [Programm starten](#6-programm-starten)
-7. [Erste Anmeldung und Prüfung](#7-erste-anmeldung-und-prüfung)
+7. [Erste Anmeldung, Benutzer anlegen](#7-erste-anmeldung-benutzer-anlegen)
 8. [Transkription und KI einrichten](#8-transkription-und-ki-einrichten)
 9. [Zugriff aus dem Internet mit HTTPS (optional)](#9-zugriff-aus-dem-internet-mit-https-optional)
 10. [Datensicherung](#10-datensicherung)
@@ -140,7 +140,7 @@ nano .env
 | Zeile | Bedeutung | Beispiel |
 | --- | --- | --- |
 | `SECRET_KEY=` | Der eben erzeugte Geheimschlüssel. Nie weitergeben. | `SECRET_KEY=3f9c…a71b` |
-| `ADMIN_PASSWORD=` | Das Passwort für die Anmeldung in der App. Mindestens 12 Zeichen, nicht anderweitig verwenden. | `ADMIN_PASSWORD=Sommer-Regen-Kaffee-42` |
+| `ADMIN_PASSWORD=` | Das erste Passwort des Kontos **admin**. Mindestens 12 Zeichen, nicht anderweitig verwenden. Wird nur beim allerersten Start gebraucht; danach ändern Sie Passwörter in der App. | `ADMIN_PASSWORD=Sommer-Regen-Kaffee-42` |
 | `APP_PORT=` | Der Port, unter dem die App im Netzwerk erreichbar ist. 8080 ist üblich; ist er belegt, nehmen Sie z. B. 8180. | `APP_PORT=8080` |
 
 Die übrigen Zeilen können Sie zunächst so lassen:
@@ -190,23 +190,33 @@ Sie sollten zwei Dienste sehen:
 
 Das Programm startet nach einem Neustart des Servers automatisch wieder.
 
-## 7. Erste Anmeldung und Prüfung
+## 7. Erste Anmeldung, Benutzer anlegen
 
 1. Ermitteln Sie die Adresse des Servers im Netzwerk, z. B. mit `hostname -I` (die erste Zahlenfolge, etwa
    `192.168.1.50`).
 2. Öffnen Sie an einem Arbeitsplatz den Browser und rufen Sie auf:
    `http://192.168.1.50:8080` (Ihre Adresse und Ihr `APP_PORT`).
-3. Melden Sie sich mit dem `ADMIN_PASSWORD` aus der `.env` an.
+3. Melden Sie sich mit dem Benutzernamen **admin** und dem `ADMIN_PASSWORD` aus der `.env` an.
 4. Sie sehen die Seite **Personengruppen** mit dem Projekt **Standardprojekt** oben in der Auswahl. Die
    Installation ist damit abgeschlossen.
 5. Unten auf der Seite **Sicherung** steht der **Programmstand** (eine kurze Kennung wie `633a3fb`). Diese Angabe
    hilft bei Rückfragen.
 
-Geben Sie den Kolleginnen und Kollegen die Adresse und das Passwort weiter. Es gibt einen gemeinsamen Zugang; die
-Anmeldung bleibt 14 Tage gültig. Nach 10 falschen Passworteingaben ist die Anmeldung für 15 Minuten gesperrt.
+6. Ändern Sie oben rechts unter **Administrator** („Mein Konto“) das Passwort, falls das `ADMIN_PASSWORD` noch anderen
+   bekannt ist.
+7. Legen Sie unter **Benutzer** für jede Person ein eigenes Konto an (Rolle *Interviewer* oder *Admin*) und ordnen
+   Sie Interviewer ihren Projekten zu. Geben Sie Adresse, Benutzername und erstes Passwort persönlich weiter.
 
-**Passwort ändern:** Neues `ADMIN_PASSWORD` in die `.env` eintragen und `docker compose up -d` ausführen. Alle
-bisherigen Anmeldungen werden dabei ungültig.
+Jede Anmeldung bleibt auf dem Gerät 14 Tage gültig. Nach 10 falschen Eingaben ist die Anmeldung von diesem Rechner
+aus für 15 Minuten gesperrt. Was Admins und Interviewer jeweils dürfen, steht in der
+[Bedienungsanleitung](BEDIENUNGSANLEITUNG.md#17-benutzer-und-rollen).
+
+> **Update von einer Version ohne Benutzerkonten:** Beim ersten Start legt das Programm automatisch das Konto
+> **admin** mit dem bisherigen `ADMIN_PASSWORD` an; alle vorhandenen Interviews gehören diesem Konto. Wer sich mit
+> dem alten Passwort anmeldet, ist als *admin* angemeldet.
+
+> **Nur im Intranet betreiben.** Die Benutzerverwaltung ist für ein internes Netz gedacht. Für den Betrieb im
+> Internet fehlen bewusst noch Funktionen wie Zwei-Faktor-Anmeldung.
 
 ## 8. Transkription und KI einrichten
 
@@ -363,7 +373,16 @@ Transkriptions-Server aus oder eine Firewall dazwischen.
 Aufnahmen in der App (die Transkripte bleiben dabei nicht erhalten – vorher exportieren). Alte Programmversionen
 räumt `docker image prune` auf.
 
-**Passwort vergessen.** Steht in der `.env` auf dem Server (`grep ADMIN_PASSWORD .env`).
+**Passwort vergessen.** Ein Admin setzt unter **Benutzer → Bearbeiten** ein neues Passwort. Hat der einzige Admin
+sein Passwort vergessen oder sich ausgesperrt, geht es auf dem Server:
+
+```sh
+docker compose exec app python -m app.services.users liste                 # Konten anzeigen
+docker compose exec -it app python -m app.services.users passwort admin    # neues Passwort setzen (fragt danach)
+docker compose exec app python -m app.services.users admin <benutzername>  # Konto wieder zum aktiven Admin machen
+```
+
+Das `ADMIN_PASSWORD` in der `.env` hilft hier nicht mehr: Es wird nur beim allerersten Start verwendet.
 
 ## 14. Deinstallieren
 
