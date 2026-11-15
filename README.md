@@ -6,7 +6,7 @@ Selbst gehostete Web-App, die Interviewer Frage für Frage durch ein Gespräch f
 importierte Fragenkataloge, je Frage eine Notiz mit Autosave und am Ende einen Export als PDF, Markdown oder CSV.
 
 **Anleitungen:** [Installation](docs/INSTALLATION.md) (Schritt für Schritt, auch für Nicht-Entwickler) ·
-[Bedienungsanleitung](docs/BEDIENUNGSANLEITUNG.md) ([PDF](docs/Bedienungsanleitung.pdf))
+[Bedienungsanleitung](docs/BEDIENUNGSANLEITUNG.md) ([PDF](docs/Bedienungsanleitung.pdf)) · [Änderungen](CHANGELOG.md)
 
 > **Nur für den Betrieb im eigenen Rechner oder im Intranet gedacht.** Die App ist nicht für den direkten Betrieb im
 > Internet gehärtet. Interviews, Aufnahmen und Transkripte sind vertrauliche Daten.
