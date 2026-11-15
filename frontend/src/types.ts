@@ -13,6 +13,7 @@ export interface Project {
   name: string
   beschreibung: string
   ki_anweisung: string
+  ki_analyse_anweisung: string
   angelegt_am: string
   gruppen: number
   kataloge: number
@@ -171,6 +172,26 @@ export interface LlmSettings {
   api_key_gesetzt: boolean
   anweisung: string
   anweisung_angepasst: boolean
+  analyse_anweisung: string
+  analyse_anweisung_angepasst: boolean
+}
+
+export interface ProjectAnalysis {
+  status: EvaluationStatus
+  analyse: string
+  kurzfassung: string
+  fehler: string
+  fortschritt: string
+  modell: string
+  interviews: number
+  umfang: string
+  bearbeitet: boolean
+  gestartet_am: string | null
+  fertig_am: string | null
+  interviews_jetzt: number
+  mit_transkript: number
+  mit_bewertung: number
+  anweisung_quelle: 'projekt' | 'allgemein'
 }
 
 export interface LlmCheck extends ServerCheck {

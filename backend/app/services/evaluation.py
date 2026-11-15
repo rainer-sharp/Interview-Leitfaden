@@ -256,4 +256,17 @@ def requeue_interrupted() -> int:
         return len(rows)
 
 
-worker = Worker(process=lambda: process_next(), recover=requeue_interrupted, name="ki-bewertung")
+def _process_any() -> bool:
+    """Ein Thread für alle LLM-Aufträge: erst Interviews, dann Projekt-Analysen."""
+    from app.services import project_analysis  # spät: das Modul importiert dieses
+
+    return process_next() or project_analysis.process_next()
+
+
+def _recover_all() -> int:
+    from app.services import project_analysis
+
+    return requeue_interrupted() + project_analysis.requeue_interrupted()
+
+
+worker = Worker(process=_process_any, recover=_recover_all, name="ki-bewertung")

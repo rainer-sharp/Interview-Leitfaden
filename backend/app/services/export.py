@@ -24,7 +24,7 @@ def _date(interview: Interview) -> str:
     return interview.datum.strftime("%d.%m.%Y")
 
 
-def _meta(interview: Interview) -> list[tuple[str, str]]:
+def meta(interview: Interview) -> list[tuple[str, str]]:
     catalog = interview.questionnaire
     rows = [("Person", interview.person)]
     if interview.organisation:
@@ -78,20 +78,23 @@ def evaluation_note(interview: Interview) -> str:
     return "KI-generiert – bitte prüfen. " + ", ".join(parts) + "."
 
 
-def _demote(markdown: str, levels: int) -> str:
+def demote(markdown: str, levels: int) -> str:
     """Überschriften der LLM-Antwort unter die Export-Überschrift einordnen (## → ###)."""
     return re.sub(r"^(#{1,6}) ", lambda m: "#" * min(6, len(m.group(1)) + levels) + " ", markdown, flags=re.M)
 
 
+def slug(text: str, fallback: str) -> str:
+    ascii_text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    return re.sub(r"[^A-Za-z0-9]+", "-", ascii_text).strip("-").lower()[:40] or fallback
+
+
 def filename(interview: Interview, extension: str) -> str:
-    slug = unicodedata.normalize("NFKD", interview.person).encode("ascii", "ignore").decode()
-    slug = re.sub(r"[^A-Za-z0-9]+", "-", slug).strip("-").lower()[:40] or "person"
-    return f"interview-{interview.id}-{interview.datum.isoformat()}-{slug}.{extension}"
+    return f"interview-{interview.id}-{interview.datum.isoformat()}-{slug(interview.person, 'person')}.{extension}"
 
 
 def to_markdown(interview: Interview) -> str:
     lines = [f"# Interview: {interview.person}", ""]
-    lines += [f"- **{label}:** {value}" for label, value in _meta(interview)]
+    lines += [f"- **{label}:** {value}" for label, value in meta(interview)]
     for section, answers in _sections(interview):
         lines += ["", f"## {section}"]
         for answer in answers:
@@ -105,7 +108,7 @@ def to_markdown(interview: Interview) -> str:
             lines.append(answer.notiz.strip() or "_(keine Notiz)_")
     lines += ["", "## Gesamtnotiz", "", interview.gesamtnotiz.strip() or "_(keine Gesamtnotiz)_", ""]
     if evaluation := evaluation_text(interview):
-        lines += ["## KI-Bewertung", "", f"_{evaluation_note(interview)}_", "", _demote(evaluation, 1), ""]
+        lines += ["## KI-Bewertung", "", f"_{evaluation_note(interview)}_", "", demote(evaluation, 1), ""]
     for name, text in transcripts(interview):
         lines += [f"## Transkript: {name}", "", text, ""]
     return "\n".join(lines)
@@ -179,7 +182,7 @@ def to_html(interview: Interview) -> str:
         _head(),
         f"<h1>Interview: {e(interview.person)}</h1><table class='meta'>",
     ]
-    parts += [f"<tr><td>{e(label)}</td><td>{e(value)}</td></tr>" for label, value in _meta(interview)]
+    parts += [f"<tr><td>{e(label)}</td><td>{e(value)}</td></tr>" for label, value in meta(interview)]
     parts.append("</table>")
     for section, answers in _sections(interview):
         parts.append(f"<h2>{e(section)}</h2>")
@@ -197,7 +200,7 @@ def to_html(interview: Interview) -> str:
     if evaluation := evaluation_text(interview):
         parts.append("<h2>KI-Bewertung</h2>")
         parts.append(f"<p class='ki-note'>{e(evaluation_note(interview))}</p>")
-        parts.append(f"<div class='ki'>{markdown_html(_demote(evaluation, 2))}</div>")
+        parts.append(f"<div class='ki'>{markdown_html(demote(evaluation, 2))}</div>")
     for name, text in transcripts(interview):
         parts.append(f"<h2 class='transcript'>Transkript: {e(name)}</h2>")
         for paragraph in (p.strip() for p in text.split("\n\n")):
@@ -270,7 +273,7 @@ def markdown_html(markdown: str) -> str:
 
 def evaluation_markdown(interview: Interview) -> str:
     lines = [f"# KI-Bewertung: Interview mit {interview.person}", ""]
-    lines += [f"- **{label}:** {value}" for label, value in _meta(interview)]
+    lines += [f"- **{label}:** {value}" for label, value in meta(interview)]
     lines += ["", f"_{evaluation_note(interview)}_", "", interview.evaluation.text.strip(), ""]
     return "\n".join(lines)
 
@@ -278,11 +281,57 @@ def evaluation_markdown(interview: Interview) -> str:
 def evaluation_html(interview: Interview) -> str:
     e = html.escape
     parts = [_head(), f"<h1>KI-Bewertung: Interview mit {e(interview.person)}</h1><table class='meta'>"]
-    parts += [f"<tr><td>{e(label)}</td><td>{e(value)}</td></tr>" for label, value in _meta(interview)]
+    parts += [f"<tr><td>{e(label)}</td><td>{e(value)}</td></tr>" for label, value in meta(interview)]
     parts.append(f"</table><p class='ki-note'>{e(evaluation_note(interview))}</p>")
     parts.append(f"<div class='ki'>{markdown_html(interview.evaluation.text.strip())}</div>")
     parts.append("</body></html>")
     return "".join(parts)
+
+
+def _analysis_note(analysis) -> str:
+    parts = [f"{analysis.interviews} Interviews"]
+    if analysis.umfang:
+        parts.append(analysis.umfang)
+    if analysis.fertig_am:
+        parts.append(f"erstellt am {analysis.fertig_am.strftime('%d.%m.%Y %H:%M')} UTC")
+    if analysis.modell:
+        parts.append(f"mit {analysis.modell}")
+    if analysis.bearbeitet:
+        parts.append("von Hand überarbeitet")
+    return "KI-generiert – bitte prüfen. " + ", ".join(parts) + "."
+
+
+def analysis_markdown(project) -> str:
+    analysis = project.analysis
+    lines = [f"# KI-Analyse: Projekt {project.name}", ""]
+    if project.beschreibung:
+        lines += [project.beschreibung, ""]
+    lines += [f"_{_analysis_note(analysis)}_", ""]
+    if analysis.kurzfassung.strip():
+        lines += ["## Kurzzusammenfassung", "", analysis.kurzfassung.strip(), ""]
+    if analysis.analyse.strip():
+        lines += ["## Analyse", "", demote(analysis.analyse.strip(), 1), ""]
+    return "\n".join(lines)
+
+
+def analysis_html(project) -> str:
+    e = html.escape
+    analysis = project.analysis
+    parts = [_head(), f"<h1>KI-Analyse: Projekt {e(project.name)}</h1>"]
+    if project.beschreibung:
+        parts.append(f"<p>{e(project.beschreibung)}</p>")
+    parts.append(f"<p class='ki-note'>{e(_analysis_note(analysis))}</p>")
+    if analysis.kurzfassung.strip():
+        parts.append(f"<h2>Kurzzusammenfassung</h2><div class='ki'>{markdown_html(analysis.kurzfassung.strip())}</div>")
+    if analysis.analyse.strip():
+        parts.append("<h2 class='transcript'>Analyse</h2>")
+        parts.append(f"<div class='ki'>{markdown_html(demote(analysis.analyse.strip(), 1))}</div>")
+    parts.append("</body></html>")
+    return "".join(parts)
+
+
+def analysis_pdf(project) -> bytes:
+    return _pdf(analysis_html(project))
 
 
 def _pdf(document: str) -> bytes:

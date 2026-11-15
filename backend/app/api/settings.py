@@ -74,5 +74,6 @@ def test_llm(body: LlmSettingsIn, db: Db):
         model=saved.model if body.model is None else (body.model or service.default_llm_model()),
         api_key=body.api_key or saved.api_key,
         anweisung=saved.anweisung,
+        analyse_anweisung=saved.analyse_anweisung,
     )
     return evaluation.check_server(server)

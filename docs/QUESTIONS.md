@@ -99,3 +99,18 @@ Gesammelt bei der Umsetzung der Pakete 1–10. Die Punkte unter „Annahmen“ s
     „Interviews“ kann per Häkchen alle Projekte zeigen.
 37. **Exporte und Backup** nennen das Projekt (Zeile „Projekt“, CSV-Spalte `projekt`, Katalogordner im Backup-ZIP
     `kataloge/<projekt>/<gruppe>/`). Die CSV hat damit eine Spalte mehr.
+
+## Paket 15: Sammelexport und KI-Analyse je Projekt (Auftrag aus dem Chat)
+
+38. **Sammelexport** als Markdown und JSON, wahlweise „nur Transkripte“. Inhalt je Interview wie der Einzelexport
+    (Markdown) bzw. strukturiert (JSON, Format `interview-leitfaden-projekt/1`). Die Projekt-Analyse ist nicht
+    enthalten, sie hat einen eigenen Download.
+39. **Analyse und Kurzzusammenfassung** in zwei LLM-Aufrufen: erst die Analyse über alle Unterlagen, dann die
+    Kurzzusammenfassung aus der Analyse (kein zweites Mal alle Transkripte, und beide widersprechen sich nicht).
+    Ein Ergebnis je Projekt, neue Analyse ersetzt es; bei Fehler bleibt das vorherige stehen.
+40. **Kontextfenster** (262 144 Tokens beim jetzigen Modell, Grenze ca. 600 000 Zeichen): Kürzen in Stufen statt
+    Teil-Analysen je Interview (Map-Reduce). Reicht für Projekte bis etwa 30–40 Interviews mit je einer Stunde
+    Transkript, wenn die Interviews eine KI-Bewertung haben. Darüber wäre Map-Reduce ein eigenes Paket.
+41. **Eigene Analyse-Anweisung** je Projekt und eine allgemeine in den Einstellungen, wie bei der Interview-Bewertung.
+    Die Anweisung für die Kurzzusammenfassung ist fest.
+42. **Ein Hintergrund-Thread** für alle LLM-Aufträge; Interview-Bewertungen haben Vorrang vor Projekt-Analysen.

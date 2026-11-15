@@ -68,17 +68,56 @@ def _defaults() -> dict[str, str]:
     }
 
 
+LLM_ANALYSIS_INSTRUCTIONS = """Du bist ein erfahrener Analyst. Du erhältst alle Interviews eines Projekts: je Interview \
+die Notizen des Interviewers zu den Fragen, seine Gesamtnotiz, falls vorhanden die KI-Bewertung des einzelnen \
+Interviews und das automatisch erstellte Transkript.
+
+Erstelle auf Deutsch eine Analyse über alle Interviews in Markdown mit genau diesen Abschnitten (Überschriften mit ##):
+
+## Überblick
+Projekt, Anzahl und Zusammensetzung der Befragten (Gruppen, Organisationen), Zeitraum.
+
+## Zentrale Erkenntnisse
+Die wichtigsten Ergebnisse über alle Interviews, jeweils mit Angabe, wie viele bzw. welche Befragte das stützen.
+
+## Gemeinsamkeiten und Unterschiede
+Wo sind sich die Befragten einig, wo gehen die Meinungen auseinander – auch zwischen den Gruppen.
+
+## Bedarfe, Probleme und Chancen
+Konkrete Bedarfe, wiederkehrende Probleme, genannte Wünsche und erkennbare Chancen.
+
+## Auffälligkeiten und Lücken
+Einzelmeinungen mit Gewicht, Widersprüche, Fragen, die kaum oder nur oberflächlich beantwortet wurden.
+
+## Gesamtbewertung
+Gesamteindruck über das Projekt mit Einstufung (sehr positiv, positiv, neutral, kritisch, sehr kritisch) und \
+Begründung.
+
+## Empfehlungen und nächste Schritte
+Konkrete Empfehlungen als Aufzählung.
+
+Nenne Personen mit dem Namen bzw. Kürzel aus den Unterlagen. Halte dich streng an den Inhalt und erfinde nichts. \
+Transkripte sind maschinell erstellt und können Fehler enthalten. Antworte nur mit der Analyse, ohne Vorrede."""
+
+LLM_SHORT_INSTRUCTIONS = """Du erhältst die Analyse eines Interview-Projekts. Schreibe daraus auf Deutsch eine \
+Kurzzusammenfassung für Entscheider in Markdown: höchstens eine Seite, ein einleitender Absatz (2–3 Sätze), dann \
+5 bis 8 Kernpunkte als Aufzählung und zum Schluss ein Satz zur Gesamteinschätzung. Keine Überschriften, keine \
+neuen Inhalte, die nicht in der Analyse stehen. Antworte nur mit der Kurzzusammenfassung."""
+
+
 @dataclass(frozen=True)
 class LlmSettings:
     url: str
     model: str  # leer = automatisch das erste Modell des Servers
     api_key: str
-    anweisung: str  # System-Prompt für die Bewertung
+    anweisung: str  # System-Prompt für die Bewertung eines Interviews
+    analyse_anweisung: str = LLM_ANALYSIS_INSTRUCTIONS  # System-Prompt für die Analyse eines Projekts
 
     def public(self) -> dict:
         data = asdict(self)
         data["api_key_gesetzt"] = bool(data.pop("api_key")) and self.api_key != "EMPTY"
         data["anweisung_angepasst"] = self.anweisung != LLM_INSTRUCTIONS
+        data["analyse_anweisung_angepasst"] = self.analyse_anweisung != LLM_ANALYSIS_INSTRUCTIONS
         return data
 
 
@@ -89,6 +128,7 @@ def _llm_defaults() -> dict[str, str]:
         "model": env.llm_model or LLM_MODEL,
         "api_key": env.llm_api_key or "EMPTY",
         "anweisung": LLM_INSTRUCTIONS,
+        "analyse_anweisung": LLM_ANALYSIS_INSTRUCTIONS,
     }
 
 
@@ -137,7 +177,8 @@ def llm(db: Session) -> LlmSettings:
 def update_llm(db: Session, changes: dict[str, str]) -> LlmSettings:
     defaults = _llm_defaults()
     # Unveränderte Standard-Anweisung nicht speichern, damit spätere Verbesserungen der Vorgabe ankommen.
-    if changes.get("anweisung", "").strip() == defaults["anweisung"].strip():
-        changes = {**changes, "anweisung": ""}
+    for field in ("anweisung", "analyse_anweisung"):
+        if changes.get(field, "").strip() == defaults[field].strip():
+            changes = {**changes, field: ""}
     _store(db, "llm", defaults, changes)
     return llm(db)

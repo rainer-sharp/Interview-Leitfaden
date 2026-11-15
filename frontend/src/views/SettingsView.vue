@@ -58,7 +58,7 @@ async function test() {
 
 // ------------------------------------------------------------------ LLM für die KI-Bewertung
 const llm = ref<LlmSettings | null>(null)
-const llmForm = reactive({ url: '', model: '', api_key: '', anweisung: '' })
+const llmForm = reactive({ url: '', model: '', api_key: '', anweisung: '', analyse_anweisung: '' })
 const llmRemoveKey = ref(false)
 const llmMessage = ref('')
 const llmCheck = ref<LlmCheck | null>(null)
@@ -71,7 +71,12 @@ function fillLlm(values: LlmSettings) {
 }
 
 function llmPayload() {
-  const body: Record<string, string> = { url: llmForm.url.trim(), model: llmForm.model.trim(), anweisung: llmForm.anweisung }
+  const body: Record<string, string> = {
+    url: llmForm.url.trim(),
+    model: llmForm.model.trim(),
+    anweisung: llmForm.anweisung,
+    analyse_anweisung: llmForm.analyse_anweisung,
+  }
   if (llmRemoveKey.value) body.api_key = ''
   else if (llmForm.api_key.trim()) body.api_key = llmForm.api_key.trim()
   return body
@@ -254,17 +259,36 @@ onMounted(async () => {
       </div>
       <div>
         <div class="flex flex-wrap items-baseline justify-between gap-2">
-          <label class="label" for="llm-anweisung">Anweisung an das Modell (System-Prompt)</label>
+          <label class="label" for="llm-anweisung">Anweisung für die Interview-Bewertung (System-Prompt)</label>
           <button v-if="llm.anweisung_angepasst" type="button" class="link text-sm" @click="resetInstructions">
             Vorgabe wiederherstellen
           </button>
         </div>
         <textarea id="llm-anweisung" v-model="llmForm.anweisung" class="input min-h-72 font-mono text-sm"></textarea>
         <p class="muted mt-1">
-          Legt Aufbau und Maßstab der Bewertung fest. Leer speichern = Vorgabe. Gilt für alle Projekte ohne eigene
-          Anweisung; die lässt sich unter <RouterLink to="/projekte" class="link">Projekte</RouterLink> → Bearbeiten
-          festlegen.
+          Legt Aufbau und Maßstab der Bewertung eines Interviews fest. Leer speichern = Vorgabe. Gilt für alle Projekte
+          ohne eigene Anweisung; die lässt sich unter <RouterLink to="/projekte" class="link">Projekte</RouterLink> →
+          Details festlegen.
         </p>
+      </div>
+      <div>
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <label class="label" for="llm-analyse-anweisung">Anweisung für die Projekt-Analyse (System-Prompt)</label>
+          <button
+            v-if="llm.analyse_anweisung_angepasst"
+            type="button"
+            class="link text-sm"
+            @click="llmForm.analyse_anweisung = ''"
+          >
+            Vorgabe wiederherstellen
+          </button>
+        </div>
+        <textarea
+          id="llm-analyse-anweisung"
+          v-model="llmForm.analyse_anweisung"
+          class="input min-h-72 font-mono text-sm"
+        ></textarea>
+        <p class="muted mt-1">Für die Analyse über alle Interviews eines Projekts. Leer speichern = Vorgabe.</p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <button type="submit" class="btn btn-primary">Speichern</button>

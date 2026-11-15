@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import get_engine
-from app.models import Evaluation, Recording
+from app.models import Evaluation, ProjectAnalysis, Recording
 from app.services import audit
 
 BACKEND = Path(__file__).resolve().parents[2]
@@ -155,6 +155,7 @@ def _running_jobs(db: Session) -> int:
     return (
         db.query(Recording).filter(Recording.transkript_status == "laeuft").count()
         + db.query(Evaluation).filter(Evaluation.status == "laeuft").count()
+        + db.query(ProjectAnalysis).filter(ProjectAnalysis.status == "laeuft").count()
     )
 
 
@@ -185,7 +186,7 @@ def _make_safety_copy(live: Path) -> str:
 
 
 def restore_database(backup_db: Path) -> RestoreResult:
-    from app.services import evaluation, transcription  # spät: beide importieren Worker/DB-Zugriff
+    from app.services import evaluation, project_analysis, transcription  # spät: importieren Worker/DB-Zugriff
 
     live = live_database()
     revision, counts = inspect(backup_db)
@@ -208,6 +209,7 @@ def restore_database(backup_db: Path) -> RestoreResult:
     # Aufträge, die beim Sichern liefen, neu einreihen und die Threads wecken.
     transcription.requeue_interrupted()
     evaluation.requeue_interrupted()
+    project_analysis.requeue_interrupted()
     transcription.worker.notify()
     evaluation.worker.notify()
 

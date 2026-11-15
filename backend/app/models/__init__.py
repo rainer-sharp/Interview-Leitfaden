@@ -22,10 +22,15 @@ class Project(Base):
     beschreibung: Mapped[str] = mapped_column(Text, default="")
     # Anweisung (System-Prompt) für die KI-Bewertung; leer = die allgemeine aus den Einstellungen
     ki_anweisung: Mapped[str] = mapped_column(Text, default="")
+    # Anweisung für die Analyse über alle Interviews des Projekts; leer = die allgemeine aus den Einstellungen
+    ki_analyse_anweisung: Mapped[str] = mapped_column(Text, default="")
     angelegt_am: Mapped[datetime] = mapped_column(DateTime, default=now)
 
     groups: Mapped[list["Group"]] = relationship(
         back_populates="project", cascade="all, delete-orphan", order_by="Group.name"
+    )
+    analysis: Mapped["ProjectAnalysis | None"] = relationship(
+        back_populates="project", cascade="all, delete-orphan", uselist=False
     )
 
 
@@ -155,6 +160,28 @@ class Evaluation(Base):
     fertig_am: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     interview: Mapped[Interview] = relationship(back_populates="evaluation")
+
+
+class ProjectAnalysis(Base):
+    """KI-Analyse über alle Interviews eines Projekts: ausführliche Analyse und Kurzzusammenfassung."""
+
+    __tablename__ = "project_analysis"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id", ondelete="CASCADE"), unique=True)
+    status: Mapped[str] = mapped_column(String(20), default="wartend")  # wartend | laeuft | fertig | fehler
+    analyse: Mapped[str] = mapped_column(Text, default="")
+    kurzfassung: Mapped[str] = mapped_column(Text, default="")
+    fehler: Mapped[str] = mapped_column(Text, default="")
+    fortschritt: Mapped[str] = mapped_column(String(200), default="")
+    modell: Mapped[str] = mapped_column(String(300), default="")
+    interviews: Mapped[int] = mapped_column(Integer, default=0)  # so viele Interviews flossen ein
+    umfang: Mapped[str] = mapped_column(String(300), default="")  # z. B. „vollständig“ oder was gekürzt wurde
+    bearbeitet: Mapped[bool] = mapped_column(default=False)
+    gestartet_am: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    fertig_am: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    project: Mapped[Project] = relationship(back_populates="analysis")
 
 
 class Setting(Base):

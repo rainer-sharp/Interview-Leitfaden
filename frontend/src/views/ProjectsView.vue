@@ -70,7 +70,8 @@ onMounted(load)
     <h1 class="page-title">Projekte</h1>
     <p class="muted">
       Ein Projekt fasst Personengruppen mit ihren Fragenkatalogen und die dazugehörigen Interviews zusammen. Beim Kopieren
-      werden Gruppen und Kataloge übernommen, Interviews nicht.
+      werden Gruppen und Kataloge übernommen, Interviews nicht. Unter „Details“: alle Interviews als eine Datei, KI-Analyse
+      des Projekts und eigene KI-Anweisungen.
     </p>
     <p v-if="error" class="error-box" role="alert">{{ error }}</p>
 
@@ -93,12 +94,12 @@ onMounted(load)
               {{ project.gruppen }} {{ project.gruppen === 1 ? 'Gruppe' : 'Gruppen' }} · {{ project.kataloge }}
               {{ project.kataloge === 1 ? 'Katalog' : 'Kataloge' }} · {{ project.interviews }}
               {{ project.interviews === 1 ? 'Interview' : 'Interviews' }}
-              <template v-if="project.ki_anweisung"> · eigene KI-Anweisung</template>
+              <template v-if="project.ki_anweisung || project.ki_analyse_anweisung"> · eigene KI-Anweisung</template>
             </div>
           </div>
           <div class="flex flex-wrap gap-2">
             <button class="btn btn-primary" @click="open(project)">Öffnen</button>
-            <RouterLink :to="`/projekte/${project.id}`" class="btn">Bearbeiten</RouterLink>
+            <RouterLink :to="`/projekte/${project.id}`" class="btn">Details</RouterLink>
             <button class="btn" @click="startCopy(project)">Kopieren</button>
             <button
               v-if="projects.length > 1 && !project.interviews"

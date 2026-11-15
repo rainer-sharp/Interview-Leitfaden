@@ -10,7 +10,7 @@ def default_project(db: Session) -> Project:
     """Das älteste Projekt; ohne Projekt wird eins angelegt (z. B. nach dem Löschen aller Gruppen per DB)."""
     project = db.query(Project).order_by(Project.id).first()
     if project is None:
-        project = Project(name="Standardprojekt", beschreibung="", ki_anweisung="")
+        project = Project(name="Standardprojekt", beschreibung="", ki_anweisung="", ki_analyse_anweisung="")
         db.add(project)
         db.flush()
     return project
@@ -42,6 +42,7 @@ def copy_project(db: Session, source: Project, name: str, beschreibung: str | No
         name=name,
         beschreibung=source.beschreibung if beschreibung is None else beschreibung,
         ki_anweisung=source.ki_anweisung,
+        ki_analyse_anweisung=source.ki_analyse_anweisung,
     )
     for group in source.groups:
         new_group = Group(name=group.name, beschreibung=group.beschreibung)

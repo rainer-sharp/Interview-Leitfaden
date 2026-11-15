@@ -24,6 +24,8 @@ class ProjectIn(BaseModel):
     name: Name
     beschreibung: str = ""
     ki_anweisung: Annotated[str, StringConstraints(max_length=20_000)] = ""
+    # None = unverändert, leer = allgemeine Analyse-Anweisung aus den Einstellungen
+    ki_analyse_anweisung: Annotated[str, StringConstraints(max_length=20_000)] | None = None
 
 
 class ProjectCopyIn(BaseModel):
@@ -36,6 +38,7 @@ class ProjectOut(BaseModel):
     name: str
     beschreibung: str
     ki_anweisung: str
+    ki_analyse_anweisung: str
     angelegt_am: datetime
     gruppen: int
     kataloge: int
@@ -218,6 +221,32 @@ class EvaluationOut(BaseModel):
     transkription_laeuft: bool
 
 
+class ProjectAnalysisOut(BaseModel):
+    """status „keine“, solange das Projekt nicht analysiert wurde."""
+
+    status: Literal["keine", "wartend", "laeuft", "fertig", "fehler"]
+    analyse: str = ""
+    kurzfassung: str = ""
+    fehler: str = ""
+    fortschritt: str = ""
+    modell: str = ""
+    interviews: int = 0
+    umfang: str = ""
+    bearbeitet: bool = False
+    gestartet_am: datetime | None = None
+    fertig_am: datetime | None = None
+    # Stand jetzt, für den Hinweis vor dem Start
+    interviews_jetzt: int
+    mit_transkript: int
+    mit_bewertung: int
+    anweisung_quelle: Literal["projekt", "allgemein"]
+
+
+class ProjectAnalysisUpdate(BaseModel):
+    analyse: str | None = None
+    kurzfassung: str | None = None
+
+
 class EvaluationUpdate(BaseModel):
     text: str
 
@@ -228,6 +257,8 @@ class LlmSettingsOut(BaseModel):
     api_key_gesetzt: bool
     anweisung: str
     anweisung_angepasst: bool
+    analyse_anweisung: str
+    analyse_anweisung_angepasst: bool
 
 
 class LlmSettingsIn(BaseModel):
@@ -237,6 +268,7 @@ class LlmSettingsIn(BaseModel):
     model: Annotated[str, StringConstraints(strip_whitespace=True, max_length=300)] | None = None
     api_key: Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)] | None = None
     anweisung: Annotated[str, StringConstraints(max_length=20_000)] | None = None
+    analyse_anweisung: Annotated[str, StringConstraints(max_length=20_000)] | None = None
 
 
 class LlmCheckOut(ServerCheckOut):

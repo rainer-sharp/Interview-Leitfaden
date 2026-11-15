@@ -8,6 +8,12 @@ import pytest
 from app.services import restore
 
 
+def head_revision() -> str:
+    from alembic.script import ScriptDirectory
+
+    return ScriptDirectory.from_config(restore._alembic_config()).get_current_head()
+
+
 def make_interview(client, person="Anna", note="Früh"):
     group_id = client.post("/api/groups", json={"name": f"Gruppe {person}"}).json()["id"]
     catalog = client.post(f"/api/groups/{group_id}/questionnaires", json={"name": "Leitfaden"}).json()
@@ -36,7 +42,7 @@ def test_restore_zip_replaces_all_data(client, database):
     response = upload(client, backup)
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["interviews"] == 1 and body["gruppen"] == 1 and body["stand_backup"] == "0004"
+    assert body["interviews"] == 1 and body["gruppen"] == 1 and body["stand_backup"] == head_revision()
     assert body["sicherungskopie"].startswith("vor-wiederherstellung-")
     assert people(client) == ["Anna"]
     interview = client.get("/api/interviews").json()[0]
@@ -92,7 +98,7 @@ def test_older_backup_is_migrated(client, database, tmp_path):
     make_interview(client, "Neu")
     assert upload(client, old.read_bytes(), "alt.db").json()["stand_backup"] == "0002"
     with sqlite3.connect(database) as connection:
-        assert connection.execute("select version_num from alembic_version").fetchone() == ("0004",)
+        assert connection.execute("select version_num from alembic_version").fetchone() == (head_revision(),)
         assert connection.execute("select count(*) from evaluation").fetchone() == (0,)
     interviews = client.get("/api/interviews").json()
     assert [(i["person"], i["projekt_name"], i["group_name"]) for i in interviews] == [

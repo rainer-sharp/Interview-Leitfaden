@@ -51,6 +51,14 @@ committet **und** gepusht sind und der Server auf dem richtigen Branch steht (`g
    Interviews), z. B. für die nächste Befragungsrunde. Unter „Bearbeiten“ lässt sich je Projekt eine eigene
    Anweisung für die KI-Bewertung festlegen. Daten aus der Zeit vor den Projekten liegen im „Standardprojekt“; eine
    Gruppe lässt sich mit allen Interviews in ein anderes Projekt verschieben (Gruppe → Bearbeiten → Projekt).
+   Unter Projekte → **Details**:
+   - **Alle Interviews als eine Datei**: Markdown oder JSON mit Fragen, Notizen, Gesamtnotiz, KI-Bewertung und
+     Transkripten aller Interviews des Projekts; wahlweise nur die Transkripte.
+   - **KI-Analyse des Projekts**: Analyse über alle Interviews (Überblick, Erkenntnisse, Gemeinsamkeiten und
+     Unterschiede, Bedarfe, Gesamtbewertung, Empfehlungen) plus daraus abgeleitete Kurzzusammenfassung; korrigierbar,
+     Download als PDF oder Markdown. Sehr umfangreiche Projekte werden gekürzt (erst Transkripte von Interviews,
+     die schon eine KI-Bewertung haben, dann übrige Transkripte); das Ergebnis vermerkt, was gekürzt wurde.
+   - Eigene Anweisungen für die Bewertung einzelner Interviews und für die Projekt-Analyse.
 1. **Gruppe anlegen**, z. B. „Lagerpersonal“.
 2. **Fragenliste importieren** (CSV, XLSX oder JSON). Die Vorschau zeigt Zeichensatz, Trennzeichen und Fehler mit
    Zeilennummer, gespeichert wird erst danach: als neuer Katalog, als neue Version oder angehängt. Eine Beispieldatei
@@ -110,8 +118,8 @@ hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn 
   Server unter `/models` anbietet (derzeit `nvidia/Qwen3.8-Flash-Next-FP4-Local`), ein Modellwechsel auf dem Server
   braucht also keine Änderung in der App.
 - **Einstellungen** → „LLM-Server für die KI-Bewertung“: URL, Modell, API-Schlüssel, „Verbindung testen“ und die
-  Anweisung an das Modell (System-Prompt; legt Aufbau und Maßstab der Bewertung fest). Ein Projekt kann eine eigene
-  Anweisung haben, die dann für seine Interviews gilt. Leere Felder fallen auf
+  Anweisungen an das Modell (System-Prompts) für die Bewertung eines Interviews und für die Analyse eines Projekts.
+  Ein Projekt kann für beides eigene Anweisungen haben. Leere Felder fallen auf
   `LLM_URL`, `LLM_MODEL`, `LLM_API_KEY` aus der `.env` und danach auf die Vorgaben zurück.
 - Die Bewertung läuft im Hintergrund (typisch unter einer Minute, bei langen Transkripten länger), unabhängig von
   einer laufenden Transkription. Transkripte über 500 000 Zeichen werden gekürzt.
