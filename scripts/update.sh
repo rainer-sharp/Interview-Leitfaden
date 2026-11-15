@@ -37,6 +37,7 @@ if [ "$pull" = 1 ]; then
     git status --short --untracked-files=no
     fail "Lokale Änderungen im Repo. Bitte committen oder mit 'git stash' beiseitelegen, dann erneut starten."
   fi
+  echo "Quelle: $(git remote get-url origin 2>/dev/null || echo 'kein origin')"
   git fetch --prune
   upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null) \
     || fail "Branch $branch hat keinen Upstream (git branch -u origin/$branch)."

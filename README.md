@@ -1,5 +1,7 @@
 # Interview-Leitfaden
 
+Projektseite: https://github.com/rainer-sharp/Interview-Leitfaden
+
 Selbst gehostete Web-App, die Interviewer Frage für Frage durch ein Gespräch führt. Pro Personengruppe gibt es
 importierte Fragenkataloge, je Frage eine Notiz mit Autosave und am Ende einen Export als PDF, Markdown oder CSV.
 

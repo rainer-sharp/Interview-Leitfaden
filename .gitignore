@@ -12,6 +12,3 @@ data/*
 !data/.gitkeep
 backups/*
 !backups/.gitkeep
-
-# Lokale Hilfsskripte, nicht Teil des Projekts
-/publish-github.sh

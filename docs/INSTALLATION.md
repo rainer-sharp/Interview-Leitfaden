@@ -101,16 +101,17 @@ Legen Sie fest, wo das Programm liegen soll, z. B. im Heimatverzeichnis unter `i
 
 ```sh
 cd ~
-git clone <ADRESSE-DES-REPOSITORYS> interview
+git clone https://github.com/rainer-sharp/Interview-Leitfaden.git interview
 cd interview
 ```
 
-`<ADRESSE-DES-REPOSITORYS>` ersetzen Sie durch die Adresse, die Sie erhalten haben. Fragt Git nach Zugangsdaten
-oder meldet „Host key verification failed“, wenden Sie sich an den Betreuer: Für SSH-Adressen muss auf dem Server
-ein Schlüssel hinterlegt sein.
+Das Projekt ist öffentlich auf GitHub (https://github.com/rainer-sharp/Interview-Leitfaden); zum Herunterladen und für spätere Updates sind weder ein
+GitHub-Konto noch Zugangsdaten nötig. Fragt Git trotzdem nach einem Benutzernamen, ist die Adresse falsch
+geschrieben (Groß-/Kleinschreibung beachten).
 
-**Mit ZIP-Datei:** Kopieren Sie die ZIP-Datei auf den Server, entpacken Sie sie (`unzip interview.zip`) und wechseln
-Sie in den entpackten Ordner (`cd interview`). Updates müssen Sie dann später ebenfalls von Hand einspielen.
+**Mit ZIP-Datei:** Laden Sie auf https://github.com/rainer-sharp/Interview-Leitfaden unter **Code → Download ZIP** die ZIP-Datei herunter, kopieren Sie
+sie auf den Server, entpacken Sie sie (`unzip Interview-Leitfaden-main.zip`) und wechseln Sie in den entpackten
+Ordner (`cd Interview-Leitfaden-main`). Updates müssen Sie dann später ebenfalls von Hand einspielen.
 
 Alle weiteren Befehle führen Sie **in diesem Ordner** aus. Mit `pwd` sehen Sie, wo Sie gerade sind; mit `ls` sollten
 Sie unter anderem `docker-compose.yml`, `README.md` und den Ordner `scripts` sehen.
@@ -322,6 +323,15 @@ Das Skript
 
 Die Datenbank wird beim Start automatisch auf den neuen Stand gebracht. Geöffnete Browserfenster zeigen danach
 einen gelben Hinweis „Eine neue Version der App ist installiert“ – ein Klick auf **Jetzt neu laden** genügt.
+
+Das Skript zeigt zu Beginn die **Quelle**, von der es holt. Steht dort nicht
+`https://github.com/rainer-sharp/Interview-Leitfaden.git` (z. B. bei älteren Installationen aus einer anderen
+Quelle), stellen Sie einmalig um und starten das Update erneut:
+
+```sh
+git remote set-url origin https://github.com/rainer-sharp/Interview-Leitfaden.git
+git fetch origin && git branch -u origin/main main
+```
 
 Meldet das Skript „Lokale Änderungen im Repo“, wurde im Programmordner etwas verändert. Wenden Sie sich an den
 Betreuer, statt die Änderungen zu löschen.
