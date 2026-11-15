@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { setUnauthorizedHandler } from './api'
 import { checkSession, loggedIn } from './stores/session'
+import { reloadApp, updateAvailable } from './stores/version'
 import BackupView from './views/BackupView.vue'
 import CatalogEditorView from './views/CatalogEditorView.vue'
 import GroupsView from './views/GroupsView.vue'
@@ -33,7 +34,13 @@ export const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
+  // Neue Version auf dem Server: beim nächsten Seitenwechsel ganz neu laden statt im alten Frontend weiter.
+  // Läuft nach den Leave-Guards der Ansichten, ausstehende Notizen sind dann schon gespeichert.
+  if (updateAvailable.value && from.matched.length) {
+    reloadApp(to.fullPath)
+    return false
+  }
   if (to.meta.public) return true
   if (await checkSession()) return true
   return { path: '/login', query: { weiter: to.fullPath } }

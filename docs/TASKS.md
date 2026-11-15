@@ -35,5 +35,6 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“). Abw
   live geprüft.
 - Paket 13: `scripts/update.sh` (Update mit Sicherung und Versionsprüfung) nur mit einer docker-Attrappe getestet,
   nicht gegen echtes Docker.
+- Update-Hinweis im Browser (`e2e/version.spec.ts`) nur per Vitest geprüft, E2E lief hier nicht (libatk fehlt).
 - Version 2 laut SPEC: Folgefragen, Antwort-Typen, Zeitmessung, Gruppenauswertung, Rollen. (LLM-Zusammenfassung je
   Interview: Paket 12; über mehrere Interviews einer Gruppe noch offen.)

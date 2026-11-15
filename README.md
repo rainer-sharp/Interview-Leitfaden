@@ -34,7 +34,10 @@ und `ADMIN_PASSWORD` startet sie bewusst nicht. Einen guten Schlüssel erzeugt z
 3. baut das Image neu und ersetzt den Container,
 4. wartet, bis die App antwortet, und prüft, dass sie den gerade gebauten Git-Stand meldet.
 
-Der laufende Stand steht unter `/api/health` (`version`) und unten auf der Seite „Sicherung“. Optionen:
+Der laufende Stand steht unter `/api/health` (`version`) und unten auf der Seite „Sicherung“. Geöffnete
+Browser-Tabs merken ein Update selbst (Prüfung alle 5 Minuten und beim Zurückwechseln in den Tab): Sie zeigen
+oben „Neue Version … Jetzt neu laden“ und laden spätestens beim nächsten Seitenwechsel neu. Abmelden lädt die App
+ebenfalls komplett neu. Optionen:
 `--no-cache` (ohne Docker-Cache bauen), `--no-pull` (nur lokal neu bauen), `--no-backup`.
 
 Wichtig: Der Server baut, was in seinem Git-Checkout liegt. Neue Funktionen kommen dort erst an, wenn sie
