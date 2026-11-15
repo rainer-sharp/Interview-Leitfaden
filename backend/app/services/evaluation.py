@@ -8,6 +8,7 @@ dauern; sie läuft deshalb wie die Transkription in einem Hintergrund-Thread.
 import json
 import logging
 import re
+from dataclasses import replace
 import urllib.error
 import urllib.request
 from collections.abc import Callable
@@ -18,6 +19,7 @@ from app.db import get_engine
 from app.models import Evaluation, Interview, now
 from app.services import audit
 from app.services import export
+from app.services import projects as project_service
 from app.services import settings as settings_service
 from app.services.transcription import Worker
 
@@ -56,6 +58,7 @@ def build_prompt(interview: Interview) -> tuple[str, bool]:
         lines.append(f"- Organisation: {interview.organisation}")
     lines += [
         f"- Datum: {interview.datum.strftime('%d.%m.%Y')}",
+        f"- Projekt: {catalog.group.project.name}",
         f"- Gruppe: {catalog.group.name}",
         f"- Fragenkatalog: {catalog.name} (Version {catalog.version})",
         "",
@@ -215,7 +218,9 @@ def process_next(generator: Generator = generate) -> bool:
         evaluation_id = evaluation.id
         # Die Unterlagen werden jetzt gelesen, damit auch kurz vorher eingetragene Transkripte dabei sind.
         prompt, with_transcript = build_prompt(evaluation.interview)
-        server = settings_service.llm(db)
+        # Die Anweisung des Projekts geht der allgemeinen aus den Einstellungen vor.
+        instructions, _source = project_service.instructions_for(db, evaluation.interview)
+        server = replace(settings_service.llm(db), anweisung=instructions)
 
     text, error, model = "", "", server.model
     try:

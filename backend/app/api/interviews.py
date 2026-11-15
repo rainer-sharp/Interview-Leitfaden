@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Response
 
 from app.api.deps import Db, get_or_404
 from app.api.schemas import AnswerOut, AnswerUpdate, InterviewIn, InterviewOut, InterviewSummary, InterviewUpdate
-from app.models import Answer, Interview, Questionnaire
+from app.models import Answer, Group, Interview, Questionnaire
 from app.services import audit
 from app.services import export
 from app.services import interviews as service
@@ -22,6 +22,8 @@ def summary(interview: Interview) -> dict:
         "organisation": interview.organisation,
         "datum": interview.datum,
         "status": interview.status,
+        "projekt_id": catalog.group.project_id,
+        "projekt_name": catalog.group.project.name,
         "group_name": catalog.group.name,
         "questionnaire_name": catalog.name,
         "version": catalog.version,
@@ -45,8 +47,16 @@ def _require_running(interview: Interview) -> None:
 
 
 @router.get("", response_model=list[InterviewSummary])
-def list_interviews(db: Db):
-    rows = db.query(Interview).order_by(Interview.datum.desc(), Interview.id.desc()).all()
+def list_interviews(db: Db, projekt_id: int | None = None):
+    """Ohne projekt_id alle Interviews aller Projekte."""
+    query = db.query(Interview)
+    if projekt_id is not None:
+        query = (
+            query.join(Questionnaire, Interview.questionnaire_id == Questionnaire.id)
+            .join(Group, Questionnaire.group_id == Group.id)
+            .filter(Group.project_id == projekt_id)
+        )
+    rows = query.order_by(Interview.datum.desc(), Interview.id.desc()).all()
     return [summary(i) for i in rows]
 
 

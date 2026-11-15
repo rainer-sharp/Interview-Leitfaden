@@ -3,6 +3,7 @@
 - **Person:** Jürgen Müller
 - **Organisation:** Muster & Söhne GmbH
 - **Datum:** 09.11.2026
+- **Projekt:** Standardprojekt
 - **Gruppe:** Kunden Einkauf
 - **Fragenkatalog:** Leitfaden (Version 1)
 - **Status:** abgeschlossen

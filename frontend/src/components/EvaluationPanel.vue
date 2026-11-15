@@ -6,7 +6,7 @@ import { EVALUATION_STATUS_LABEL, evaluationBusy, sourcesHint } from '../stores/
 import { elapsed } from '../stores/recordings'
 import type { Evaluation, Recording } from '../types'
 
-const props = defineProps<{ interviewId: number; recordings: Recording[] }>()
+const props = defineProps<{ interviewId: number; recordings: Recording[]; projectId?: number }>()
 
 const evaluation = ref<Evaluation | null>(null)
 const draft = ref('')
@@ -131,7 +131,14 @@ onBeforeUnmount(() => clearInterval(timer))
           </button>
         </div>
       </div>
-      <p v-if="!busy" class="muted" data-testid="evaluation-sources">{{ sourcesHint(evaluation) }}</p>
+      <p v-if="!busy" class="muted" data-testid="evaluation-sources">
+        {{ sourcesHint(evaluation) }}
+        <span data-testid="evaluation-instructions">
+          Anweisung:
+          {{ evaluation.anweisung_quelle === 'projekt' ? `eigene des Projekts „${evaluation.projekt_name}“` : 'allgemeine' }}
+          (<RouterLink :to="projectId ? `/projekte/${projectId}` : '/projekte'" class="link">im Projekt anpassen</RouterLink>).
+        </span>
+      </p>
       <p v-else class="muted">
         Je nach Länge des Transkripts dauert das einige Minuten. Die Seite darf geschlossen werden, der Server arbeitet
         weiter.

@@ -12,6 +12,7 @@ from app.api.catalogs import router as catalogs_router
 from app.api.evaluation import router as evaluation_router
 from app.api.imports import router as imports_router
 from app.api.interviews import router as interviews_router
+from app.api.projects import router as projects_router
 from app.api.recordings import router as recordings_router
 from app.api.settings import llm_router, router as settings_router
 from app.config import get_settings, validate_secrets
@@ -59,7 +60,7 @@ def health() -> dict[str, str]:
 
 app.include_router(auth_router, prefix="/api")
 for protected in (
-    catalogs_router, imports_router, interviews_router, recordings_router, evaluation_router,
+    projects_router, catalogs_router, imports_router, interviews_router, recordings_router, evaluation_router,
     settings_router, llm_router, backup_router,
 ):
     app.include_router(protected, prefix="/api", dependencies=[Depends(require_auth)])

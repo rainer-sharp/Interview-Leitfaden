@@ -17,6 +17,29 @@ class Orm(BaseModel):
 class GroupIn(BaseModel):
     name: Name
     beschreibung: str = ""
+    projekt_id: int | None = None  # beim Anlegen; ohne Angabe das Standardprojekt
+
+
+class ProjectIn(BaseModel):
+    name: Name
+    beschreibung: str = ""
+    ki_anweisung: Annotated[str, StringConstraints(max_length=20_000)] = ""
+
+
+class ProjectCopyIn(BaseModel):
+    name: Name | None = None  # ohne Angabe „<Name> (Kopie)“
+    beschreibung: str | None = None
+
+
+class ProjectOut(BaseModel):
+    id: int
+    name: str
+    beschreibung: str
+    ki_anweisung: str
+    angelegt_am: datetime
+    gruppen: int
+    kataloge: int
+    interviews: int
 
 
 class QuestionnaireSummary(Orm):
@@ -31,6 +54,8 @@ class QuestionnaireSummary(Orm):
 
 class GroupOut(Orm):
     id: int
+    projekt_id: int
+    projekt_name: str
     name: str
     beschreibung: str
     questionnaires: list[QuestionnaireSummary]
@@ -104,6 +129,8 @@ class InterviewSummary(Orm):
     organisation: str
     datum: date
     status: str
+    projekt_id: int
+    projekt_name: str
     group_name: str
     questionnaire_name: str
     version: int
@@ -186,6 +213,8 @@ class EvaluationOut(BaseModel):
     gestartet_am: datetime | None = None
     fertig_am: datetime | None = None
     hat_transkript: bool  # liegt jetzt ein Transkript vor (für den Hinweis vor dem Start)
+    anweisung_quelle: Literal["projekt", "allgemein"]  # welche Anweisung beim nächsten Start gilt
+    projekt_name: str
     transkription_laeuft: bool
 
 

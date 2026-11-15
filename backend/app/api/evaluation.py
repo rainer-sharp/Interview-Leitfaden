@@ -10,13 +10,16 @@ from app.models import Interview
 from app.services import audit
 from app.services import evaluation as service
 from app.services import export
+from app.services import projects as project_service
 
 router = APIRouter(prefix="/interviews/{interview_id}/bewertung")
 
 
-def _out(interview: Interview) -> dict:
+def _out(db: Db, interview: Interview) -> dict:
     current = interview.evaluation
     data = {
+        "anweisung_quelle": project_service.instructions_for(db, interview)[1],
+        "projekt_name": interview.questionnaire.group.project.name,
         "hat_transkript": bool(export.transcripts(interview)),
         "transkription_laeuft": any(r.transkript_status in ("wartend", "laeuft") for r in interview.recordings),
     }
@@ -33,7 +36,7 @@ def _require_idle(interview: Interview) -> None:
 
 @router.get("", response_model=EvaluationOut)
 def get_evaluation(interview_id: int, db: Db):
-    return _out(get_or_404(db, Interview, interview_id))
+    return _out(db, get_or_404(db, Interview, interview_id))
 
 
 @router.post("", response_model=EvaluationOut, status_code=202)
@@ -46,7 +49,7 @@ def start_evaluation(interview_id: int, db: Db):
     audit.log(db, "bewertung", interview.id, "bewertung-gestartet")
     db.commit()
     service.worker.notify()
-    return _out(interview)
+    return _out(db, interview)
 
 
 @router.put("", response_model=EvaluationOut)
@@ -60,7 +63,7 @@ def update_evaluation(interview_id: int, body: EvaluationUpdate, db: Db):
         interview.evaluation.text = body.text
         interview.evaluation.bearbeitet = True
         db.commit()
-    return _out(interview)
+    return _out(db, interview)
 
 
 @router.delete("", status_code=204)

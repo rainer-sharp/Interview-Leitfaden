@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 import { today } from '../stores/interviewState'
+import { currentProject, ensureProject, setCurrentProject } from '../stores/project'
 import type { Group, Interview } from '../types'
 
 const route = useRoute()
@@ -18,10 +19,17 @@ const error = ref('')
 const busy = ref(false)
 const loaded = ref(false)
 
-const usableGroups = computed(() => groups.value.filter((g) => g.questionnaires.some((c) => c.fragen > 0)))
+const usableGroups = computed(() =>
+  groups.value.filter((g) => g.projekt_id === currentProject.value?.id && g.questionnaires.some((c) => c.fragen > 0)),
+)
 const catalogs = computed(
   () => groups.value.find((g) => g.id === groupId.value)?.questionnaires.filter((c) => c.fragen > 0) ?? [],
 )
+
+// Projekt oben gewechselt: Gruppe aus dem alten Projekt verwerfen
+watch(usableGroups, (list) => {
+  if (!list.some((g) => g.id === groupId.value)) groupId.value = list.length === 1 ? list[0].id : null
+})
 
 watch(groupId, () => {
   if (!catalogs.value.some((c) => c.id === catalogId.value)) {
@@ -49,6 +57,7 @@ async function start() {
 
 onMounted(async () => {
   try {
+    await ensureProject()
     groups.value = await api.get<Group[]>('/groups')
   } catch (e) {
     error.value = (e as Error).message
@@ -56,6 +65,8 @@ onMounted(async () => {
   }
   const wanted = Number(route.query.katalog)
   const owner = groups.value.find((g) => g.questionnaires.some((c) => c.id === wanted))
+  // Start aus einem Katalog heraus: dessen Projekt wird das aktuelle
+  if (owner) setCurrentProject(owner.projekt_id)
   groupId.value = owner?.id ?? (usableGroups.value.length === 1 ? usableGroups.value[0].id : null)
   if (owner) catalogId.value = wanted
   loaded.value = true
@@ -64,10 +75,14 @@ onMounted(async () => {
 
 <template>
   <main class="page max-w-xl space-y-6">
-    <h1 class="page-title">Interview starten</h1>
+    <div>
+      <h1 class="page-title">Interview starten</h1>
+      <p v-if="currentProject" class="muted">Projekt: {{ currentProject.name }}</p>
+    </div>
     <p v-if="error" class="error-box" role="alert">{{ error }}</p>
     <p v-if="loaded && !usableGroups.length" class="muted">
-      Es gibt noch keinen Katalog mit Fragen. Legen Sie zuerst eine Gruppe an und importieren Sie eine Fragenliste.
+      Dieses Projekt hat noch keinen Katalog mit Fragen. Legen Sie zuerst eine Gruppe an und importieren Sie eine
+      Fragenliste – oder wählen Sie oben ein anderes Projekt.
     </p>
 
     <form v-else-if="loaded" class="card space-y-4" @submit.prevent="start">

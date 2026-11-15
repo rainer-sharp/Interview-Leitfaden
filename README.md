@@ -45,6 +45,12 @@ committet **und** gepusht sind und der Server auf dem richtigen Branch steht (`g
 
 ## Bedienung
 
+0. **Projekt wählen** (Auswahl oben in der Navigation, verwalten unter „Projekte“). Ein Projekt fasst Gruppen mit
+   ihren Katalogen und deren Interviews zusammen; Gruppen, Interviews und „Interview starten“ zeigen immer das
+   aktuelle Projekt. „Kopieren“ legt ein neues Projekt mit Kopien aller Gruppen, Kataloge und Fragen an (ohne
+   Interviews), z. B. für die nächste Befragungsrunde. Unter „Bearbeiten“ lässt sich je Projekt eine eigene
+   Anweisung für die KI-Bewertung festlegen. Daten aus der Zeit vor den Projekten liegen im „Standardprojekt“; eine
+   Gruppe lässt sich mit allen Interviews in ein anderes Projekt verschieben (Gruppe → Bearbeiten → Projekt).
 1. **Gruppe anlegen**, z. B. „Lagerpersonal“.
 2. **Fragenliste importieren** (CSV, XLSX oder JSON). Die Vorschau zeigt Zeichensatz, Trennzeichen und Fehler mit
    Zeilennummer, gespeichert wird erst danach: als neuer Katalog, als neue Version oder angehängt. Eine Beispieldatei
@@ -104,7 +110,8 @@ hierher kopieren (`test_vendored_script_is_unchanged` meldet Abweichungen, wenn 
   Server unter `/models` anbietet (derzeit `nvidia/Qwen3.8-Flash-Next-FP4-Local`), ein Modellwechsel auf dem Server
   braucht also keine Änderung in der App.
 - **Einstellungen** → „LLM-Server für die KI-Bewertung“: URL, Modell, API-Schlüssel, „Verbindung testen“ und die
-  Anweisung an das Modell (System-Prompt; legt Aufbau und Maßstab der Bewertung fest). Leere Felder fallen auf
+  Anweisung an das Modell (System-Prompt; legt Aufbau und Maßstab der Bewertung fest). Ein Projekt kann eine eigene
+  Anweisung haben, die dann für seine Interviews gilt. Leere Felder fallen auf
   `LLM_URL`, `LLM_MODEL`, `LLM_API_KEY` aus der `.env` und danach auf die Vorgaben zurück.
 - Die Bewertung läuft im Hintergrund (typisch unter einer Minute, bei langen Transkripten länger), unabhängig von
   einer laufenden Transkription. Transkripte über 500 000 Zeichen werden gekürzt.

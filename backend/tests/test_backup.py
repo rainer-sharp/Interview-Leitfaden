@@ -20,7 +20,7 @@ def test_backup_zip_contains_db_and_csvs(client, testdata, tmp_path):
         "interviews.db",
         "alle-interviews.csv",
         "interviews/interview-1-2026-11-09-anna.csv",
-        "kataloge/Lager_Team/Leitfaden-v1.csv",
+        "kataloge/Standardprojekt/Lager_Team/Leitfaden-v1.csv",
     } <= names
 
     db_file = tmp_path / "restore.db"
@@ -30,7 +30,7 @@ def test_backup_zip_contains_db_and_csvs(client, testdata, tmp_path):
 
     assert "Früh" in archive.read("alle-interviews.csv").decode("utf-8-sig")
     # Der gesicherte Katalog lässt sich direkt wieder importieren.
-    restored = client.post("/api/import/vorschau", files={"file": ("k.csv", archive.read("kataloge/Lager_Team/Leitfaden-v1.csv"))})
+    restored = client.post("/api/import/vorschau", files={"file": ("k.csv", archive.read("kataloge/Standardprojekt/Lager_Team/Leitfaden-v1.csv"))})
     assert restored.json()["ok"] and len(restored.json()["rows"]) == 3
 
 

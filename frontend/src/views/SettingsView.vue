@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { api } from '../api'
 import type { LlmCheck, LlmSettings, ServerCheck, TranscriptionMode, TranscriptionSettings } from '../types'
 
@@ -259,7 +260,11 @@ onMounted(async () => {
           </button>
         </div>
         <textarea id="llm-anweisung" v-model="llmForm.anweisung" class="input min-h-72 font-mono text-sm"></textarea>
-        <p class="muted mt-1">Legt Aufbau und Maßstab der Bewertung fest. Leer speichern = Vorgabe.</p>
+        <p class="muted mt-1">
+          Legt Aufbau und Maßstab der Bewertung fest. Leer speichern = Vorgabe. Gilt für alle Projekte ohne eigene
+          Anweisung; die lässt sich unter <RouterLink to="/projekte" class="link">Projekte</RouterLink> → Bearbeiten
+          festlegen.
+        </p>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <button type="submit" class="btn btn-primary">Speichern</button>

@@ -15,6 +15,7 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“). Abw
 - [x] 11 Audio-Aufnahme je Interview, Transkription über transcribe_interview.py, Server-Einstellungen (ki-prompt.md)
 - [x] 12 KI-Bewertung je Interview (Zusammenfassung inkl. Transkript) per LLM, Download PDF/Markdown, LLM-Einstellungen
 - [x] 13 Restore: Backup-ZIP oder tägliche .db in der App bzw. per scripts/restore.sh, mit Sicherungskopie und Rückgängig
+- [x] 14 Projekte: Gruppen und Interviews je Projekt, Projekt kopieren (mit Gruppen/Katalogen), KI-Anweisung je Projekt
 
 ## Offen
 
@@ -36,5 +37,7 @@ Akzeptanzkriterien stehen in docs/SPEC.md („Arbeitspakete als Prompts“). Abw
 - Paket 13: `scripts/update.sh` (Update mit Sicherung und Versionsprüfung) nur mit einer docker-Attrappe getestet,
   nicht gegen echtes Docker.
 - Update-Hinweis im Browser (`e2e/version.spec.ts`) nur per Vitest geprüft, E2E lief hier nicht (libatk fehlt).
+- Paket 14: E2E (`e2e/projects.spec.ts`) lief hier nicht (libatk fehlt). Migration 0004 mit vorhandenen Gruppen
+  sowie Downgrade geprüft. Vor dem Update auf dem Server: Backup (macht `scripts/update.sh` automatisch).
 - Version 2 laut SPEC: Folgefragen, Antwort-Typen, Zeitmessung, Gruppenauswertung, Rollen. (LLM-Zusammenfassung je
   Interview: Paket 12; über mehrere Interviews einer Gruppe noch offen.)

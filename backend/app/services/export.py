@@ -15,7 +15,7 @@ STATUS_LABEL = {
     "spaeter": "später nochmal",
 }
 CSV_COLUMNS = [
-    "interview_id", "person", "organisation", "datum", "gruppe", "katalog", "version",
+    "interview_id", "person", "organisation", "datum", "projekt", "gruppe", "katalog", "version",
     "position", "abschnitt", "frage", "pflicht", "status", "notiz",
 ]
 
@@ -31,6 +31,7 @@ def _meta(interview: Interview) -> list[tuple[str, str]]:
         rows.append(("Organisation", interview.organisation))
     rows += [
         ("Datum", _date(interview)),
+        ("Projekt", catalog.group.project.name),
         ("Gruppe", catalog.group.name),
         ("Fragenkatalog", f"{catalog.name} (Version {catalog.version})"),
         ("Status", interview.status),
@@ -121,7 +122,7 @@ def csv_rows(interview: Interview) -> list[list[str]]:
     catalog = interview.questionnaire
     base = [
         str(interview.id), interview.person, interview.organisation, interview.datum.isoformat(),
-        catalog.group.name, catalog.name, str(catalog.version),
+        catalog.group.project.name, catalog.group.name, catalog.name, str(catalog.version),
     ]
     rows = []
     for answer in interview.answers:

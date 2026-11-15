@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { api } from '../api'
+import { loadProjects, projects } from '../stores/project'
 import type { Group, QuestionnaireSummary } from '../types'
 
 const props = defineProps<{ id: number }>()
@@ -12,6 +13,7 @@ const error = ref('')
 const editing = ref(false)
 const editName = ref('')
 const editDesc = ref('')
+const editProject = ref<number | null>(null)
 const newCatalog = ref('')
 
 async function guarded(action: () => Promise<void>) {
@@ -31,13 +33,19 @@ const load = () =>
 function startEdit() {
   editName.value = group.value!.name
   editDesc.value = group.value!.beschreibung
+  editProject.value = group.value!.projekt_id
   editing.value = true
 }
 
 const saveEdit = () =>
   guarded(async () => {
-    group.value = await api.put<Group>(`/groups/${props.id}`, { name: editName.value, beschreibung: editDesc.value })
+    group.value = await api.put<Group>(`/groups/${props.id}`, {
+      name: editName.value,
+      beschreibung: editDesc.value,
+      projekt_id: editProject.value,
+    })
     editing.value = false
+    await loadProjects() // Zähler in der Projektliste
   })
 
 const removeGroup = () =>
@@ -78,6 +86,15 @@ onMounted(load)
           <label class="label" for="edit-desc">Beschreibung</label>
           <input id="edit-desc" v-model="editDesc" class="input" />
         </div>
+        <div v-if="projects.length > 1">
+          <label class="label" for="edit-project">Projekt</label>
+          <select id="edit-project" v-model.number="editProject" class="input">
+            <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
+          </select>
+          <p v-if="editProject !== group.projekt_id" class="muted mt-1">
+            Die Gruppe wandert mit allen Katalogen und Interviews in das gewählte Projekt.
+          </p>
+        </div>
         <div class="flex gap-2">
           <button class="btn btn-primary">Speichern</button>
           <button type="button" class="btn" @click="editing = false">Abbrechen</button>
@@ -87,6 +104,7 @@ onMounted(load)
         <div>
           <h1 class="page-title">{{ group.name }}</h1>
           <p v-if="group.beschreibung" class="muted">{{ group.beschreibung }}</p>
+          <p class="muted">Projekt: {{ group.projekt_name }}</p>
         </div>
         <div class="flex gap-2">
           <button class="btn" @click="startEdit">Bearbeiten</button>

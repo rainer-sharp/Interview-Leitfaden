@@ -36,7 +36,7 @@ def test_restore_zip_replaces_all_data(client, database):
     response = upload(client, backup)
     assert response.status_code == 200, response.text
     body = response.json()
-    assert body["interviews"] == 1 and body["gruppen"] == 1 and body["stand_backup"] == "0003"
+    assert body["interviews"] == 1 and body["gruppen"] == 1 and body["stand_backup"] == "0004"
     assert body["sicherungskopie"].startswith("vor-wiederherstellung-")
     assert people(client) == ["Anna"]
     interview = client.get("/api/interviews").json()[0]
@@ -62,22 +62,42 @@ def test_restore_plain_db_file(client, database, tmp_path):
     assert people(client) == ["Anna"]
 
 
-def test_older_backup_is_migrated(client, database, tmp_path):
-    """Ein Backup vom Stand 0002 (vor der KI-Bewertung) wird nach dem Einspielen auf head migriert."""
+def old_database(path, revision: str):
+    """Echte Datenbank auf einem älteren Migrationsstand, mit einer Gruppe, einem Katalog und einem Interview."""
     from alembic import command
+    from alembic.config import Config
 
-    make_interview(client, "Anna")
+    from tests.conftest import BACKEND
+
+    config = Config(str(BACKEND / "alembic.ini"))
+    config.set_main_option("script_location", str(BACKEND / "alembic"))
+    config.attributes["database_url"] = f"sqlite:///{path}"
+    command.upgrade(config, revision)
+    with sqlite3.connect(path) as connection:
+        connection.execute("insert into \"group\" (id, name, beschreibung) values (1, 'Lager', '')")
+        connection.execute(
+            "insert into questionnaire (id, group_id, name, version, importiert_am) "
+            "values (1, 1, 'Leitfaden', 1, '2026-11-01 10:00:00')"
+        )
+        connection.execute(
+            "insert into interview (id, questionnaire_id, person, organisation, datum, status, gesamtnotiz) "
+            "values (1, 1, 'Alt', '', '2026-11-02', 'laufend', 'Notiz von früher')"
+        )
+
+
+def test_older_backup_is_migrated(client, database, tmp_path):
+    """Ein Backup vom Stand 0002 (vor KI-Bewertung und Projekten) wird nach dem Einspielen auf head migriert."""
     old = tmp_path / "alt.db"
-    with sqlite3.connect(database) as src, sqlite3.connect(old) as dst:
-        src.backup(dst)
-    with sqlite3.connect(old) as connection:
-        connection.execute("drop table evaluation")
-        connection.execute("update alembic_version set version_num = '0002'")
+    old_database(old, "0002")
+    make_interview(client, "Neu")
     assert upload(client, old.read_bytes(), "alt.db").json()["stand_backup"] == "0002"
     with sqlite3.connect(database) as connection:
-        assert connection.execute("select version_num from alembic_version").fetchone() == ("0003",)
+        assert connection.execute("select version_num from alembic_version").fetchone() == ("0004",)
         assert connection.execute("select count(*) from evaluation").fetchone() == (0,)
-    assert command  # Import nur, damit klar ist: Migration läuft über alembic
+    interviews = client.get("/api/interviews").json()
+    assert [(i["person"], i["projekt_name"], i["group_name"]) for i in interviews] == [
+        ("Alt", "Standardprojekt", "Lager")
+    ]
 
 
 @pytest.mark.parametrize(

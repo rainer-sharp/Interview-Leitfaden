@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '../api'
+import { currentProject, currentProjectId, ensureProject } from '../stores/project'
 import type { Group } from '../types'
 
 const groups = ref<Group[]>([])
@@ -12,7 +13,8 @@ const error = ref('')
 
 async function load() {
   try {
-    groups.value = await api.get<Group[]>('/groups')
+    const projectId = await ensureProject()
+    groups.value = await api.get<Group[]>(`/groups?projekt_id=${projectId}`)
     loaded.value = true
   } catch (e) {
     error.value = (e as Error).message
@@ -22,7 +24,7 @@ async function load() {
 async function create() {
   error.value = ''
   try {
-    await api.post('/groups', { name: name.value, beschreibung: beschreibung.value })
+    await api.post('/groups', { name: name.value, beschreibung: beschreibung.value, projekt_id: currentProjectId.value })
     name.value = ''
     beschreibung.value = ''
     await load()
@@ -32,11 +34,17 @@ async function create() {
 }
 
 onMounted(load)
+watch(currentProjectId, load)
 </script>
 
 <template>
   <main class="page space-y-6">
-    <h1 class="page-title">Personengruppen</h1>
+    <div>
+      <h1 class="page-title">Personengruppen</h1>
+      <p v-if="currentProject" class="muted" data-testid="current-project">
+        Projekt: <RouterLink :to="`/projekte/${currentProject.id}`" class="link">{{ currentProject.name }}</RouterLink>
+      </p>
+    </div>
     <p v-if="error" class="error-box" role="alert">{{ error }}</p>
 
     <ul v-if="groups.length" class="grid gap-3 sm:grid-cols-2">
@@ -51,7 +59,7 @@ onMounted(load)
         </RouterLink>
       </li>
     </ul>
-    <p v-else-if="loaded" class="muted">Noch keine Gruppen. Legen Sie unten die erste an.</p>
+    <p v-else-if="loaded" class="muted">Noch keine Gruppen in diesem Projekt. Legen Sie unten die erste an.</p>
 
     <form class="card grid gap-3 sm:grid-cols-[1fr_2fr_auto] sm:items-end" @submit.prevent="create">
       <div>

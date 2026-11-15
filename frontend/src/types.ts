@@ -8,8 +8,21 @@ export interface QuestionnaireSummary {
   interviews: number
 }
 
+export interface Project {
+  id: number
+  name: string
+  beschreibung: string
+  ki_anweisung: string
+  angelegt_am: string
+  gruppen: number
+  kataloge: number
+  interviews: number
+}
+
 export interface Group {
   id: number
+  projekt_id: number
+  projekt_name: string
   name: string
   beschreibung: string
   questionnaires: QuestionnaireSummary[]
@@ -86,6 +99,8 @@ export interface InterviewSummary {
   organisation: string
   datum: string
   status: 'laufend' | 'abgeschlossen'
+  projekt_id: number
+  projekt_name: string
   group_name: string
   questionnaire_name: string
   version: number
@@ -146,6 +161,8 @@ export interface Evaluation {
   fertig_am: string | null
   hat_transkript: boolean
   transkription_laeuft: boolean
+  anweisung_quelle: 'projekt' | 'allgemein'
+  projekt_name: string
 }
 
 export interface LlmSettings {

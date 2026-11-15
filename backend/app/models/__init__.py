@@ -12,12 +12,33 @@ class Base(DeclarativeBase):
     pass
 
 
-class Group(Base):
-    __tablename__ = "group"
+class Project(Base):
+    """Klammer um Gruppen (mit ihren Katalogen) und damit um deren Interviews."""
+
+    __tablename__ = "project"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(200), unique=True)
     beschreibung: Mapped[str] = mapped_column(Text, default="")
+    # Anweisung (System-Prompt) für die KI-Bewertung; leer = die allgemeine aus den Einstellungen
+    ki_anweisung: Mapped[str] = mapped_column(Text, default="")
+    angelegt_am: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+    groups: Mapped[list["Group"]] = relationship(
+        back_populates="project", cascade="all, delete-orphan", order_by="Group.name"
+    )
+
+
+class Group(Base):
+    __tablename__ = "group"
+    __table_args__ = (UniqueConstraint("project_id", "name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("project.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    beschreibung: Mapped[str] = mapped_column(Text, default="")
+
+    project: Mapped[Project] = relationship(back_populates="groups")
 
     questionnaires: Mapped[list["Questionnaire"]] = relationship(
         back_populates="group", cascade="all, delete-orphan", order_by="Questionnaire.name, Questionnaire.version"

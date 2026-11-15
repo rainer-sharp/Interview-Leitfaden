@@ -12,8 +12,9 @@ from app.api.schemas import (
     QuestionnaireSummary,
     QuestionOut,
 )
-from app.models import Group, Question, Questionnaire
+from app.models import Group, Project, Question, Questionnaire
 from app.services import audit, catalog as catalog_service
+from app.services import projects as project_service
 
 router = APIRouter()
 
@@ -33,6 +34,8 @@ def summary(catalog: Questionnaire) -> dict:
 def group_out(group: Group) -> dict:
     return {
         "id": group.id,
+        "projekt_id": group.project_id,
+        "projekt_name": group.project.name,
         "name": group.name,
         "beschreibung": group.beschreibung,
         "questionnaires": [summary(c) for c in group.questionnaires],
@@ -51,16 +54,27 @@ def _commit_or_conflict(db: Db, detail: str) -> None:
         raise HTTPException(status_code=409, detail=detail) from None
 
 
+DUPLICATE_GROUP = "Eine Gruppe mit diesem Namen gibt es in diesem Projekt schon."
+
+
 @router.get("/groups", response_model=list[GroupOut])
-def list_groups(db: Db):
-    return [group_out(g) for g in db.query(Group).order_by(Group.name).all()]
+def list_groups(db: Db, projekt_id: int | None = None):
+    """Ohne projekt_id alle Gruppen aller Projekte."""
+    query = db.query(Group)
+    if projekt_id is not None:
+        query = query.filter(Group.project_id == projekt_id)
+    return [group_out(g) for g in query.order_by(Group.name, Group.id).all()]
 
 
 @router.post("/groups", response_model=GroupOut, status_code=201)
 def create_group(body: GroupIn, db: Db):
-    group = Group(name=body.name, beschreibung=body.beschreibung)
+    if body.projekt_id is None:
+        project = project_service.default_project(db)
+    else:
+        project = get_or_404(db, Project, body.projekt_id)
+    group = Group(project=project, name=body.name, beschreibung=body.beschreibung)
     db.add(group)
-    _commit_or_conflict(db, "Eine Gruppe mit diesem Namen gibt es schon.")
+    _commit_or_conflict(db, DUPLICATE_GROUP)
     return group_out(group)
 
 
@@ -73,7 +87,10 @@ def get_group(group_id: int, db: Db):
 def update_group(group_id: int, body: GroupIn, db: Db):
     group = get_or_404(db, Group, group_id)
     group.name, group.beschreibung = body.name, body.beschreibung
-    _commit_or_conflict(db, "Eine Gruppe mit diesem Namen gibt es schon.")
+    if body.projekt_id is not None and body.projekt_id != group.project_id:
+        # Verschieben: die Interviews der Gruppe wandern mit (sie hängen über den Katalog an der Gruppe)
+        group.project = get_or_404(db, Project, body.projekt_id)
+    _commit_or_conflict(db, DUPLICATE_GROUP)
     return group_out(group)
 
 

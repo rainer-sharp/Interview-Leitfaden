@@ -81,3 +81,21 @@ Gesammelt bei der Umsetzung der Pakete 1–10. Die Punkte unter „Annahmen“ s
 28. **Audiodateien** bleiben unberührt: weder gelöscht (könnten zu einem späteren Restore passen) noch
     wiederhergestellt (nicht im Backup). Verwaiste Dateien muss man bei Bedarf von Hand löschen.
 29. Navigation: Der Link „Backup“ ist jetzt die Seite „Sicherung“ mit Download, Wiederherstellen und Rückgängig.
+
+## Paket 14: Projekte (Auftrag aus dem Chat)
+
+30. **Zuordnung:** Gruppen haben ein Projekt (`group.project_id`, Migration `0004`). Interviews gehören über ihren
+    Katalog zur Gruppe und damit zum Projekt – kein eigenes Feld, damit beides nicht auseinanderlaufen kann.
+31. **Bestand:** Vorhandene Gruppen kommen bei der Migration ins „Standardprojekt“. Gruppennamen sind nur noch je
+    Projekt eindeutig (sonst hätte eine Kopie andere Namen gebraucht).
+32. **Kopieren** übernimmt Beschreibung, KI-Anweisung, alle Gruppen und alle Katalogversionen mit Fragen, aber keine
+    Interviews, Aufnahmen oder Bewertungen. Name ohne Angabe: „<Name> (Kopie)“, dann „(Kopie 2)“ usw.
+33. **Löschen** nur ohne Interviews (wie bei Gruppen und Katalogen) und nicht das letzte Projekt.
+34. **Verschieben** einer Gruppe in ein anderes Projekt ist möglich (nicht ausdrücklich verlangt, aber nötig, um den
+    Bestand aus dem Standardprojekt aufzuteilen); die Interviews wandern mit.
+35. **KI-Anweisung je Projekt** ersetzt die allgemeine vollständig (keine Ergänzung). Leer = allgemeine Anweisung aus
+    den Einstellungen. Beim Einschalten wird die allgemeine als Vorlage eingesetzt.
+36. **Aktuelles Projekt** wird je Browser gemerkt (localStorage), nicht je Benutzer (es gibt nur einen Zugang).
+    „Interviews“ kann per Häkchen alle Projekte zeigen.
+37. **Exporte und Backup** nennen das Projekt (Zeile „Projekt“, CSV-Spalte `projekt`, Katalogordner im Backup-ZIP
+    `kataloge/<projekt>/<gruppe>/`). Die CSV hat damit eine Spalte mehr.

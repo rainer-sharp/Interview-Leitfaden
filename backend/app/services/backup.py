@@ -67,7 +67,10 @@ def build_backup(db: Session) -> bytes:
 
         for group in db.query(Group).order_by(Group.id).all():
             for catalog in group.questionnaires:
-                name = f"kataloge/{_safe(group.name)}/{_safe(catalog.name)}-v{catalog.version}.csv"
+                name = (
+                    f"kataloge/{_safe(group.project.name)}/{_safe(group.name)}/"
+                    f"{_safe(catalog.name)}-v{catalog.version}.csv"
+                )
                 archive.writestr(name, _catalog_csv(catalog))
     return buffer.getvalue()
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '../api'
+import { currentProject, currentProjectId, ensureProject } from '../stores/project'
 import { formatDate } from '../stores/interviewState'
 import type { InterviewSummary } from '../types'
 
@@ -9,10 +10,14 @@ const interviews = ref<InterviewSummary[]>([])
 const loaded = ref(false)
 const error = ref('')
 const confirmDelete = ref<number | null>(null)
+const allProjects = ref(false)
 
 async function load() {
   try {
-    interviews.value = await api.get<InterviewSummary[]>('/interviews')
+    const projectId = await ensureProject()
+    interviews.value = await api.get<InterviewSummary[]>(
+      allProjects.value ? '/interviews' : `/interviews?projekt_id=${projectId}`,
+    )
     loaded.value = true
   } catch (e) {
     error.value = (e as Error).message
@@ -31,14 +36,21 @@ async function remove(id: number) {
 }
 
 onMounted(load)
+watch([currentProjectId, allProjects], load)
 </script>
 
 <template>
   <main class="page space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="page-title">Interviews</h1>
+      <div>
+        <h1 class="page-title">Interviews</h1>
+        <p v-if="currentProject && !allProjects" class="muted">Projekt: {{ currentProject.name }}</p>
+      </div>
       <RouterLink to="/interviews/neu" class="btn btn-primary">Neues Interview</RouterLink>
     </div>
+    <label class="flex items-center gap-2 text-sm">
+      <input v-model="allProjects" type="checkbox" /> Interviews aller Projekte zeigen
+    </label>
     <p v-if="error" class="error-box" role="alert">{{ error }}</p>
 
     <ul v-if="interviews.length" class="space-y-2">
@@ -55,7 +67,8 @@ onMounted(load)
             >
           </div>
           <div class="muted">
-            {{ formatDate(interview.datum) }} · {{ interview.group_name }} · {{ interview.questionnaire_name }}
+            {{ formatDate(interview.datum) }} · <template v-if="allProjects">{{ interview.projekt_name }} · </template
+            >{{ interview.group_name }} · {{ interview.questionnaire_name }}
             (V{{ interview.version }})
           </div>
           <div class="mt-1 flex items-center gap-2 text-xs">
@@ -81,6 +94,6 @@ onMounted(load)
         </div>
       </li>
     </ul>
-    <p v-else-if="loaded" class="muted">Noch keine Interviews.</p>
+    <p v-else-if="loaded" class="muted">Noch keine Interviews{{ allProjects ? '' : ' in diesem Projekt' }}.</p>
   </main>
 </template>

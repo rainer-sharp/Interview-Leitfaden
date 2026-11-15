@@ -18,7 +18,7 @@ def session(database):
 
 
 def _catalog(db: Session) -> Questionnaire:
-    catalog = Questionnaire(group=Group(name="Kunden Einkauf", beschreibung=""), name="Leitfaden")
+    catalog = Questionnaire(group=Group(project_id=1, name="Kunden Einkauf", beschreibung=""), name="Leitfaden")
     catalog.questions.append(Question(position=1, text="Wie geht's?"))
     db.add(catalog)
     db.commit()

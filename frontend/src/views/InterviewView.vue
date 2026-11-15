@@ -301,7 +301,7 @@ onBeforeUnmount(() => {
             :recordings="interview.aufnahmen"
             @changed="interview.aufnahmen = $event"
           />
-          <EvaluationPanel :interview-id="id" :recordings="interview.aufnahmen" />
+          <EvaluationPanel :interview-id="id" :recordings="interview.aufnahmen" :project-id="interview.projekt_id" />
         </InterviewSummaryPane>
 
         <article v-else-if="current" class="mx-auto max-w-3xl space-y-5" data-testid="question-screen">
