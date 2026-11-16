@@ -5,6 +5,32 @@ Projektseite: https://github.com/rainer-sharp/Interview-Leitfaden
 Selbst gehostete Web-App, die Interviewer Frage für Frage durch ein Gespräch führt. Pro Personengruppe gibt es
 importierte Fragenkataloge, je Frage eine Notiz mit Autosave und am Ende einen Export als PDF, Markdown oder CSV.
 
+### Der ganze Ablauf lokal – ohne Cloud-Dienst
+
+Vom Gespräch bis zur Auswertung kann alles auf eigenen Rechnern im eigenen Netz laufen. Interviews, Aufnahmen und
+Transkripte verlassen es dann nicht:
+
+1. **Gespräch führen und aufnehmen** – lokal, z. B. mit [Linphone](https://www.linphone.org/) (freies
+   SIP-Softphone, zeichnet Telefonate auf dem eigenen Rechner auf) oder [OBS Studio](https://obsproject.com/)
+   (getrennte Tonspuren für eigene Stimme und Gesprächspartner ergeben die genaueste Sprecherzuordnung).
+2. **Leitfaden abarbeiten** – Frage für Frage in der App, Notizen werden laufend gespeichert.
+3. **Transkribieren** – Aufnahme an das Interview hängen, ein Sprachmodell auf dem eigenen Server schreibt mit
+   Zeitmarken und Sprechern mit.
+4. **Auswerten** – ein Sprachmodell auf dem eigenen Server fasst einzelne Interviews zusammen, bewertet sie und
+   analysiert ganze Projekte.
+5. **Exportieren** – als PDF, Markdown, CSV oder JSON.
+
+Die KI-Schritte sind optional. Die App spricht dafür jeden OpenAI-kompatiblen Endpunkt an (z. B.
+[vLLM](https://github.com/vllm-project/vllm)); wer stattdessen einen externen Dienst einträgt, schickt Transkripte
+und Notizen dorthin. Entwickelt und getestet mit:
+
+| Aufgabe | Modell |
+|---|---|
+| Transkription (Sprache → Text, mit Sprecherzuordnung) | `nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4` |
+| Bewertung und Analyse (Sprachmodell) | `nvidia/Qwen3.8-Flash-Next-FP4-Local` |
+
+Andere Modelle sind möglich; Server und Modell werden in der App unter „Einstellungen“ eingetragen.
+
 **Anleitungen:** [Installation](docs/INSTALLATION.md) (Schritt für Schritt, auch für Nicht-Entwickler) ·
 [Bedienungsanleitung](docs/BEDIENUNGSANLEITUNG.md) ([PDF](docs/Bedienungsanleitung.pdf)) · [Änderungen](CHANGELOG.md)
 
