@@ -24,10 +24,10 @@ Die KI-Schritte sind optional. Die App spricht dafür jeden OpenAI-kompatiblen E
 [vLLM](https://github.com/vllm-project/vllm)); wer stattdessen einen externen Dienst einträgt, schickt Transkripte
 und Notizen dorthin. Entwickelt und getestet mit:
 
-| Aufgabe | Modell |
-|---|---|
-| Transkription (Sprache → Text, mit Sprecherzuordnung) | `nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4` |
-| Bewertung und Analyse (Sprachmodell) | `nvidia/Qwen3.8-Flash-Next-FP4-Local` |
+| Aufgabe | Modell | Hardware |
+|---|---|---|
+| Transkription (Sprache → Text, mit Sprecherzuordnung) | `nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4` | DGX Spark |
+| Bewertung und Analyse (Sprachmodell) | `nvidia/Qwen3.8-Flash-Next-FP4-Local` | DGX Spark |
 
 Andere Modelle sind möglich; Server und Modell werden in der App unter „Einstellungen“ eingetragen.
 
